@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: 'docs/package-lock.json'
+          cache-dependency-path: 'docs/package.json'
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -238,14 +238,3 @@ jobs:
           commit_user_name: 'github-actions[bot]'
           commit_user_email: 'github-actions[bot]@users.noreply.github.com'
 
-  notify-management-console:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: [deploy-docs, update-registry]
-    steps:
-      - name: Notify Unity Management Console
-        run: |
-          # Send webhook notification to Unity Management Console instances
-          # This would notify any running console instances to refresh their module registry
-          echo "Module registry updated successfully"
-          echo "Documentation deployed to: https://unity-sds.github.io/unity-terraform-modules"

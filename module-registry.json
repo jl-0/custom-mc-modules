@@ -3,28 +3,20 @@
   "metadata": {
     "name": "Unity Terraform Modules Registry",
     "description": "Official Unity Science Data System Terraform module registry providing reusable infrastructure components",
-    "last_updated": "2025-06-30T10:00:00Z",
-    "repository": "https://github.com/unity-sds/unity-terraform-modules",
-    "documentation": "https://unity-sds.github.io/unity-terraform-modules",
+    "last_updated": "2025-06-30T22:00:00Z",
+    "repository": "https://github.com/jl-0/custom-mc-modules",
+    "documentation": "https://jl-0.github.io/custom-mc-modules",
     "maintainer": "Unity SDS Team",
     "license": "Apache-2.0"
   },
   "modules": {
     "unity-s3": {
       "description": "Unity S3 bucket with security best practices and lifecycle management",
-      "source": "github.com/unity-sds/unity-terraform-modules//modules/s3",
-      "documentation": "https://unity-sds.github.io/unity-terraform-modules/modules/s3",
+      "source": "github.com/jl-0/custom-mc-modules//modules/s3",
+      "documentation": "https://jl-0.github.io/custom-mc-modules/modules/s3",
       "category": "storage",
       "tags": ["s3", "storage", "security", "lifecycle"],
       "versions": {
-        "1.0.0": {
-          "ref": "v1.0.0",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          },
-          "changelog": "Initial release with comprehensive S3 configurations"
-        },
         "latest": {
           "ref": "main",
           "terraform_version": ">= 1.0",
@@ -106,30 +98,22 @@
         {
           "name": "Basic S3 Bucket",
           "description": "Simple S3 bucket with default security settings",
-          "code": "module \"unity_bucket\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/s3?ref=v1.0.0\"\n\n  bucket_name = \"unity-example-bucket\"\n  environment = \"dev\"\n  project     = \"unity\"\n}"
+          "code": "module \"unity_bucket\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/s3?ref=main\"\n\n  bucket_name = \"unity-example-bucket\"\n  environment = \"dev\"\n  project     = \"unity\"\n}"
         },
         {
           "name": "S3 with Lifecycle",
           "description": "S3 bucket with standard Unity lifecycle rules",
-          "code": "module \"unity_data_bucket\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/s3?ref=v1.0.0\"\n\n  bucket_name               = \"unity-data-storage\"\n  environment               = \"prod\"\n  enable_standard_lifecycle = true\n}"
+          "code": "module \"unity_data_bucket\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/s3?ref=main\"\n\n  bucket_name               = \"unity-data-storage\"\n  environment               = \"prod\"\n  enable_standard_lifecycle = true\n}"
         }
       ]
     },
     "unity-vpc": {
       "description": "Unity VPC with public/private subnets across multiple AZs",
-      "source": "github.com/unity-sds/unity-terraform-modules//modules/vpc",
-      "documentation": "https://unity-sds.github.io/unity-terraform-modules/modules/vpc",
+      "source": "github.com/jl-0/custom-mc-modules//modules/vpc",
+      "documentation": "https://jl-0.github.io/custom-mc-modules/modules/vpc",
       "category": "networking",
       "tags": ["vpc", "networking", "subnets", "nat"],
       "versions": {
-        "1.0.0": {
-          "ref": "v1.0.0",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          },
-          "changelog": "Initial release with VPC, subnets, and NAT gateways"
-        },
         "latest": {
           "ref": "main",
           "terraform_version": ">= 1.0",
@@ -186,153 +170,7 @@
         {
           "name": "Basic VPC",
           "description": "VPC with public and private subnets",
-          "code": "module \"unity_vpc\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/vpc?ref=v1.0.0\"\n\n  vpc_cidr           = \"10.0.0.0/16\"\n  name_prefix        = \"unity-dev\"\n  availability_zones = [\"us-west-2a\", \"us-west-2b\"]\n}"
-        }
-      ]
-    },
-    "unity-iam": {
-      "description": "Unity IAM roles and policies for common use cases",
-      "source": "github.com/unity-sds/unity-terraform-modules//modules/iam",
-      "documentation": "https://unity-sds.github.io/unity-terraform-modules/modules/iam",
-      "category": "security",
-      "tags": ["iam", "security", "roles", "policies"],
-      "versions": {
-        "1.0.0": {
-          "ref": "v1.0.0",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          },
-          "changelog": "Initial release with common IAM patterns"
-        },
-        "latest": {
-          "ref": "main",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          }
-        }
-      },
-      "inputs": {
-        "role_name": {
-          "description": "Name of the IAM role",
-          "type": "string",
-          "required": true
-        },
-        "role_type": {
-          "description": "Type of role (ec2, lambda, ecs, eks)",
-          "type": "string",
-          "required": true,
-          "validation": "Must be one of: ec2, lambda, ecs, eks"
-        },
-        "policy_arns": {
-          "description": "List of policy ARNs to attach to the role",
-          "type": "list(string)",
-          "default": [],
-          "required": false
-        },
-        "custom_policies": {
-          "description": "Map of custom policy documents",
-          "type": "map(string)",
-          "default": {},
-          "required": false
-        },
-        "tags": {
-          "description": "Additional tags to apply to all resources",
-          "type": "map(string)",
-          "default": {},
-          "required": false
-        }
-      },
-      "outputs": {
-        "role_arn": "The ARN of the IAM role",
-        "role_name": "The name of the IAM role",
-        "instance_profile_arn": "The ARN of the instance profile (for EC2 roles)",
-        "instance_profile_name": "The name of the instance profile (for EC2 roles)"
-      },
-      "examples": [
-        {
-          "name": "EC2 Instance Role",
-          "description": "IAM role for EC2 instances with S3 access",
-          "code": "module \"ec2_role\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/iam?ref=v1.0.0\"\n\n  role_name = \"unity-ec2-role\"\n  role_type = \"ec2\"\n  policy_arns = [\n    \"arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess\"\n  ]\n}"
-        }
-      ]
-    },
-    "unity-rds": {
-      "description": "Unity RDS database instance with backup and security configurations",
-      "source": "github.com/unity-sds/unity-terraform-modules//modules/rds",
-      "documentation": "https://unity-sds.github.io/unity-terraform-modules/modules/rds",
-      "category": "database",
-      "tags": ["rds", "database", "postgresql", "mysql"],
-      "versions": {
-        "1.0.0": {
-          "ref": "v1.0.0",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          },
-          "changelog": "Initial release with PostgreSQL and MySQL support"
-        },
-        "latest": {
-          "ref": "main",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          }
-        }
-      },
-      "inputs": {
-        "identifier": {
-          "description": "The name of the RDS instance",
-          "type": "string",
-          "required": true
-        },
-        "engine": {
-          "description": "Database engine (postgres, mysql)",
-          "type": "string",
-          "default": "postgres",
-          "required": false
-        },
-        "engine_version": {
-          "description": "Database engine version",
-          "type": "string",
-          "default": "14.6",
-          "required": false
-        },
-        "instance_class": {
-          "description": "Instance type of the RDS instance",
-          "type": "string",
-          "default": "db.t3.micro",
-          "required": false
-        },
-        "allocated_storage": {
-          "description": "The allocated storage in gigabytes",
-          "type": "number",
-          "default": 20,
-          "required": false
-        },
-        "vpc_id": {
-          "description": "VPC ID for the DB subnet group",
-          "type": "string",
-          "required": true
-        },
-        "subnet_ids": {
-          "description": "List of subnet IDs for the DB subnet group",
-          "type": "list(string)",
-          "required": true
-        }
-      },
-      "outputs": {
-        "db_instance_endpoint": "The connection endpoint",
-        "db_instance_id": "The RDS instance ID",
-        "db_instance_port": "The database port",
-        "db_subnet_group_id": "The DB subnet group ID"
-      },
-      "examples": [
-        {
-          "name": "PostgreSQL Database",
-          "description": "RDS PostgreSQL instance for Unity applications",
-          "code": "module \"unity_db\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/rds?ref=v1.0.0\"\n\n  identifier     = \"unity-db\"\n  engine         = \"postgres\"\n  engine_version = \"14.6\"\n  instance_class = \"db.t3.micro\"\n  vpc_id         = module.unity_vpc.vpc_id\n  subnet_ids     = module.unity_vpc.private_subnet_ids\n}"
+          "code": "module \"unity_vpc\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/vpc?ref=main\"\n\n  vpc_cidr           = \"10.0.0.0/16\"\n  name_prefix        = \"unity-dev\"\n  availability_zones = [\"us-west-2a\", \"us-west-2b\"]\n}"
         }
       ]
     }
@@ -347,16 +185,6 @@
       "name": "Networking",
       "description": "Network infrastructure including VPC, subnets, and load balancers",
       "modules": ["unity-vpc"]
-    },
-    "security": {
-      "name": "Security",
-      "description": "Security services including IAM, KMS, and security groups",
-      "modules": ["unity-iam"]
-    },
-    "database": {
-      "name": "Database",
-      "description": "Database services including RDS and DynamoDB",
-      "modules": ["unity-rds"]
     }
   },
   "quickstart": {
@@ -371,7 +199,7 @@
     "example": {
       "name": "Complete Infrastructure Example",
       "description": "Example showing how to use multiple modules together",
-      "code": "# VPC\nmodule \"unity_vpc\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/vpc?ref=v1.0.0\"\n\n  vpc_cidr           = \"10.0.0.0/16\"\n  name_prefix        = \"unity-dev\"\n  availability_zones = [\"us-west-2a\", \"us-west-2b\"]\n}\n\n# S3 Bucket\nmodule \"unity_bucket\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/s3?ref=v1.0.0\"\n\n  bucket_name               = \"unity-data-bucket\"\n  environment               = \"dev\"\n  enable_standard_lifecycle = true\n}\n\n# Database\nmodule \"unity_db\" {\n  source = \"github.com/unity-sds/unity-terraform-modules//modules/rds?ref=v1.0.0\"\n\n  identifier = \"unity-db\"\n  vpc_id     = module.unity_vpc.vpc_id\n  subnet_ids = module.unity_vpc.private_subnet_ids\n}"
+      "code": "# VPC\nmodule \"unity_vpc\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/vpc?ref=main\"\n\n  vpc_cidr           = \"10.0.0.0/16\"\n  name_prefix        = \"unity-dev\"\n  availability_zones = [\"us-west-2a\", \"us-west-2b\"]\n}\n\n# S3 Bucket\nmodule \"unity_bucket\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/s3?ref=main\"\n\n  bucket_name               = \"unity-data-bucket\"\n  environment               = \"dev\"\n  enable_standard_lifecycle = true\n}"
     }
   }
 }

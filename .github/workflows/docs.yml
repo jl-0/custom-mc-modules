@@ -200,26 +200,60 @@ jobs:
             fi
           done
 
-  update-registry:
+  validate-registry:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     needs: [validate-modules, security-scan]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Update module registry timestamp
+      - name: Validate module registry
         run: |
-          # Update the last_updated timestamp in module-registry.json
-          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          jq --arg timestamp "$timestamp" '.metadata.last_updated = $timestamp' module-registry.json > temp.json
-          mv temp.json module-registry.json
-
-      - name: Commit updated registry
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: 'docs: update module registry timestamp [skip ci]'
-          file_pattern: 'module-registry.json'
-          commit_user_name: 'github-actions[bot]'
-          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
+          echo "🔍 Validating module-registry.json..."
+          
+          # Check JSON syntax
+          if ! jq empty module-registry.json; then
+            echo "❌ Invalid JSON syntax"
+            exit 1
+          fi
+          echo "✅ JSON syntax is valid"
+          
+          # Check that referenced modules exist
+          echo "📦 Checking referenced modules..."
+          for module in $(jq -r '.modules | keys[]' module-registry.json); do
+            # Extract actual module directory name from the module key
+            module_dir=$(echo "$module" | sed 's/unity-//')
+            if [ -d "modules/$module_dir" ] && [ -f "modules/$module_dir/main.tf" ]; then
+              echo "✅ Module $module exists (modules/$module_dir)"
+            else
+              echo "⚠️  Module $module referenced but modules/$module_dir not found or incomplete"
+            fi
+          done
+          
+          # Check for orphaned modules (exist but not in registry)
+          echo "🔍 Checking for unregistered modules..."
+          for dir in modules/*/; do
+            if [ -f "$dir/main.tf" ]; then
+              module_name=$(basename "$dir")
+              if jq -e ".modules[\"unity-$module_name\"]" module-registry.json > /dev/null; then
+                echo "✅ Module $module_name is registered"
+              else
+                echo "⚠️  Module $module_name exists but not registered in module-registry.json"
+              fi
+            fi
+          done
+          
+          # Validate required fields
+          echo "📋 Validating required fields..."
+          required_fields=".version .metadata .modules"
+          for field in $required_fields; do
+            if jq -e "$field" module-registry.json > /dev/null; then
+              echo "✅ Required field $field present"
+            else
+              echo "❌ Missing required field: $field"
+              exit 1
+            fi
+          done
+          
+          echo "✅ Module registry validation completed"
 

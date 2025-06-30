@@ -391,7 +391,10 @@
         function renderOverview() {
             return `
                 <div class="prose max-w-none">
-                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 1rem;">Overview</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">Overview</h2>
+                        <button onclick="copyPageMarkdown('overview', this)" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
+                    </div>
                     
                     <p style="font-size: 1.125rem; margin-bottom: 2rem;">
                         Unity Terraform Modules provide reusable infrastructure components designed specifically for 
@@ -480,7 +483,12 @@ module "unity_vpc" {
             const modules = Object.entries(moduleRegistry.modules);
             const categories = moduleRegistry.categories || {};
             
-            let html = '<h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 2rem;">Available Modules</h2>';
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">Available Modules</h2>
+                    <button onclick="copyPageMarkdown('modules', this)" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
+                </div>
+            `;
             
             // Render by category
             Object.entries(categories).forEach(([categoryKey, category]) => {
@@ -520,7 +528,10 @@ module "unity_vpc" {
             const quickstart = moduleRegistry.quickstart || {};
             
             return `
-                <h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 2rem;">Quick Start</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">Quick Start</h2>
+                    <button onclick="copyPageMarkdown('quickstart', this)" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
+                </div>
                 
                 <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
                     <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">Getting Started</h3>
@@ -703,9 +714,9 @@ When helping users implement these modules:
 
             return `
                 <div style="max-width: none;">
-                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                         <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">LLM Documentation</h2>
-                        <button onclick="copyMarkdownToClipboard()" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; margin-left: auto;">📋 Copy Markdown</button>
+                        <button onclick="copyMarkdownToClipboard(this, 'llm-markdown')" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
                     </div>
                     
                     <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid var(--unity-blue); margin-bottom: 2rem;">
@@ -758,13 +769,13 @@ When helping users implement these modules:
         }
         
         // Function to copy markdown to clipboard
-        function copyMarkdownToClipboard() {
-            const markdownElement = document.getElementById('llm-markdown');
-            const text = markdownElement.textContent;
+        function copyMarkdownToClipboard(buttonElement, textElementId) {
+            const textElement = textElementId ? document.getElementById(textElementId) : document.getElementById('llm-markdown');
+            const text = textElement.textContent;
             
             navigator.clipboard.writeText(text).then(() => {
                 // Show temporary success message
-                const button = event.target;
+                const button = buttonElement || event.target;
                 const originalText = button.textContent;
                 button.textContent = '✅ Copied!';
                 button.style.background = '#059669';
@@ -779,11 +790,177 @@ When helping users implement these modules:
             });
         }
         
+        // Function to generate markdown for any page
+        function generatePageMarkdown(page, moduleData = null) {
+            let markdown = '';
+            
+            switch (page) {
+                case 'overview':
+                    markdown = `# Unity Terraform Modules - Overview
+
+Unity Terraform Modules provide reusable infrastructure components designed specifically for Unity Science Data System applications. These modules follow Unity best practices for security, tagging, monitoring, and cost optimization.
+
+## Key Features
+
+- **Security First**: All modules implement security best practices by default
+- **Consistent Tagging**: Standardized tagging for cost tracking and resource management  
+- **Monitoring Ready**: Built-in CloudWatch monitoring and logging capabilities
+- **Unity Integration**: Seamless integration with Unity Management Console
+
+## Quick Example
+
+\`\`\`hcl
+# Create a secure S3 bucket with Unity best practices
+module "unity_bucket" {
+  source = "github.com/jl-0/custom-mc-modules//modules/s3?ref=main"
+
+  bucket_name = "unity-example-bucket"
+  environment = "dev"
+  project     = "unity"
+  
+  enable_standard_lifecycle = true
+}
+
+# Create VPC with public and private subnets
+module "unity_vpc" {
+  source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
+
+  vpc_cidr           = "10.0.0.0/16"
+  name_prefix        = "unity-dev"
+  availability_zones = ["us-west-2a", "us-west-2b"]
+}
+\`\`\`
+
+## Repository
+
+**URL**: ${moduleRegistry?.metadata?.repository || 'https://github.com/jl-0/custom-mc-modules'}
+**Documentation**: https://jl-0.github.io/custom-mc-modules
+**Registry JSON**: https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json`;
+                    break;
+                    
+                case 'modules':
+                    markdown = `# Unity Terraform Modules - Available Modules
+
+`;
+                    if (moduleRegistry?.modules) {
+                        Object.entries(moduleRegistry.modules).forEach(([moduleName, moduleInfo]) => {
+                            markdown += `## ${moduleName}
+
+**Description**: ${moduleInfo.description}
+**Category**: ${moduleInfo.category}
+**Source**: \`${moduleInfo.source}\`
+**Tags**: ${(moduleInfo.tags || []).join(', ')}
+
+`;
+                        });
+                    }
+                    break;
+                    
+                case 'quickstart':
+                    markdown = `# Unity Terraform Modules - Quick Start
+
+## Getting Started
+
+`;
+                    if (moduleRegistry?.quickstart?.steps) {
+                        moduleRegistry.quickstart.steps.forEach((step, index) => {
+                            markdown += `${index + 1}. ${step}\n`;
+                        });
+                    }
+                    markdown += `
+## Complete Infrastructure Example
+
+\`\`\`hcl
+${moduleRegistry?.quickstart?.example?.code || ''}
+\`\`\``;
+                    break;
+                    
+                case 'registry':
+                    markdown = `# Unity Terraform Modules - Registry Information
+
+**Name**: ${moduleRegistry?.metadata?.name || 'Unity Terraform Modules Registry'}
+**Description**: ${moduleRegistry?.metadata?.description || ''}
+**Repository**: ${moduleRegistry?.metadata?.repository || ''}
+**Last Updated**: ${moduleRegistry?.metadata?.last_updated || ''}
+
+## Registry URL
+
+\`\`\`
+https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json
+\`\`\`
+
+## Registry Data
+
+\`\`\`json
+${JSON.stringify(moduleRegistry, null, 2)}
+\`\`\``;
+                    break;
+                    
+                default:
+                    if (page.startsWith('module-') && moduleData) {
+                        const moduleName = page.replace('module-', '');
+                        markdown = `# ${moduleName}
+
+**Description**: ${moduleData.description}
+**Category**: ${moduleData.category}
+**Source**: \`${moduleData.source}\`
+**Tags**: ${(moduleData.tags || []).join(', ')}
+
+## Usage Examples
+
+`;
+                        if (moduleData.examples) {
+                            moduleData.examples.forEach(example => {
+                                markdown += `### ${example.name}
+
+${example.description}
+
+\`\`\`hcl
+${example.code}
+\`\`\`
+
+`;
+                            });
+                        }
+                        
+                        markdown += `## Inputs
+
+| Name | Description | Type | Required | Default |
+|------|-------------|------|----------|----------|
+`;
+                        if (moduleData.inputs) {
+                            Object.entries(moduleData.inputs).forEach(([name, input]) => {
+                                const defaultVal = input.default !== undefined ? `\`${JSON.stringify(input.default)}\`` : '-';
+                                markdown += `| \`${name}\` | ${input.description} | \`${input.type}\` | ${input.required ? 'Yes' : 'No'} | ${defaultVal} |\n`;
+                            });
+                        }
+                        
+                        markdown += `
+## Outputs
+
+| Name | Description |
+|------|-------------|
+`;
+                        if (moduleData.outputs) {
+                            Object.entries(moduleData.outputs).forEach(([name, description]) => {
+                                markdown += `| \`${name}\` | ${description} |\n`;
+                            });
+                        }
+                    }
+                    break;
+            }
+            
+            return markdown;
+        }
+        
         function renderRegistry() {
             if (!moduleRegistry) return '<p>Loading...</p>';
             
             return `
-                <h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 2rem;">Module Registry</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">Module Registry</h2>
+                    <button onclick="copyPageMarkdown('registry', this)" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
+                </div>
                 
                 <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
                     <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">Registry Information</h3>
@@ -814,9 +991,12 @@ When helping users implement these modules:
             }
             
             let html = `
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
-                    <button onclick="window.history.back()" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">← Back</button>
-                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">${moduleName}</h2>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button onclick="window.history.back()" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">← Back</button>
+                        <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">${moduleName}</h2>
+                    </div>
+                    <button onclick="copyModuleMarkdown('${moduleName}', this)" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
                 </div>
                 
                 <p style="font-size: 1.125rem; margin-bottom: 2rem;">${moduleData.description}</p>
@@ -900,6 +1080,47 @@ When helping users implement these modules:
             }
             
             return html;
+        }
+        
+        // Function to copy page markdown to clipboard
+        function copyPageMarkdown(page, buttonElement) {
+            const markdown = generatePageMarkdown(page);
+            
+            navigator.clipboard.writeText(markdown).then(() => {
+                // Show temporary success message
+                const originalText = buttonElement.textContent;
+                buttonElement.textContent = '✅ Copied!';
+                buttonElement.style.background = '#059669';
+                
+                setTimeout(() => {
+                    buttonElement.textContent = originalText;
+                    buttonElement.style.background = 'var(--unity-blue)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy to clipboard. Please select and copy the text manually.');
+            });
+        }
+        
+        // Function to copy module-specific markdown
+        function copyModuleMarkdown(moduleName, buttonElement) {
+            const moduleData = moduleRegistry.modules[moduleName];
+            const markdown = generatePageMarkdown(`module-${moduleName}`, moduleData);
+            
+            navigator.clipboard.writeText(markdown).then(() => {
+                // Show temporary success message
+                const originalText = buttonElement.textContent;
+                buttonElement.textContent = '✅ Copied!';
+                buttonElement.style.background = '#059669';
+                
+                setTimeout(() => {
+                    buttonElement.textContent = originalText;
+                    buttonElement.style.background = 'var(--unity-blue)';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy to clipboard. Please select and copy the text manually.');
+            });
         }
         
         // Initialize the application when DOM is loaded

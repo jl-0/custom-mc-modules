@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity Terraform Modules - Documentation</title>
+    <meta name="description" content="Official Terraform module registry for the Unity Science Data System (SDS)">
+    <meta name="keywords" content="Unity, SDS, Terraform, AWS, Infrastructure, Modules">
+    <meta name="author" content="Unity SDS Team">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Unity Terraform Modules">
+    <meta property="og:description" content="Reusable Terraform modules for Unity SDS applications">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://unity-sds.github.io/unity-terraform-modules">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Unity Terraform Modules">
+    <meta name="twitter:description" content="Reusable Terraform modules for Unity SDS applications">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --unity-blue: #1e40af;
+            --unity-blue-light: #3b82f6;
+            --unity-blue-dark: #1e3a8a;
+            --unity-gray: #64748b;
+            --unity-gray-light: #f8fafc;
+            --unity-gray-dark: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #334155;
+            background-color: #ffffff;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        /* Loading screen */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 1.5rem;
+            color: var(--unity-blue);
+        }
+        
+        .loading.hidden {
+            display: none;
+        }
+        
+        /* App content */
+        .app {
+            display: none;
+        }
+        
+        .app.loaded {
+            display: block;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--unity-blue) 0%, var(--unity-blue-dark) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        /* Navigation */
+        .nav {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-container {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            gap: 2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--unity-gray);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--unity-blue);
+        }
+        
+        /* Main content */
+        .main {
+            min-height: calc(100vh - 200px);
+        }
+        
+        /* Module grid */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .module-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .module-card:hover {
+            border-color: var(--unity-blue-light);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .module-card h3 {
+            color: var(--unity-blue);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .module-card p {
+            color: var(--unity-gray);
+            margin-bottom: 1rem;
+        }
+        
+        .module-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .tag {
+            background: var(--unity-gray-light);
+            color: var(--unity-gray-dark);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        /* Code blocks */
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+        
+        :not(pre) > code {
+            background: #f1f5f9;
+            color: #e11d48;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--unity-gray-light);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--unity-gray);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        Loading Unity Terraform Modules...
+    </div>
+    
+    <div class="app" id="app">
+        <header class="header">
+            <div class="container">
+                <h1>Unity Terraform Modules</h1>
+                <p>Reusable infrastructure components for Unity Science Data System</p>
+            </div>
+        </header>
+        
+        <nav class="nav">
+            <div class="container">
+                <div class="nav-container">
+                    <ul class="nav-links">
+                        <li><a href="#overview" class="nav-link active">Overview</a></li>
+                        <li><a href="#modules" class="nav-link">Modules</a></li>
+                        <li><a href="#quickstart" class="nav-link">Quick Start</a></li>
+                        <li><a href="#registry" class="nav-link">Registry</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <main class="main">
+            <div class="container">
+                <div id="content">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 Unity Science Data System - Jet Propulsion Laboratory, California Institute of Technology</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    
+    <script>
+        // Application state
+        let moduleRegistry = null;
+        let currentPage = 'overview';
+        
+        // Initialize the application
+        async function init() {
+            try {
+                // Load module registry
+                const response = await fetch('https://raw.githubusercontent.com/unity-sds/unity-terraform-modules/main/module-registry.json');
+                moduleRegistry = await response.json();
+                
+                // Initialize routing
+                initRouting();
+                
+                // Load initial page
+                loadPage(getPageFromHash());
+                
+                // Hide loading screen
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('app').classList.add('loaded');
+                
+            } catch (error) {
+                console.error('Failed to load module registry:', error);
+                document.getElementById('loading').innerHTML = 'Failed to load module registry. Please try again later.';
+            }
+        }
+        
+        // Routing
+        function initRouting() {
+            window.addEventListener('hashchange', () => {
+                const page = getPageFromHash();
+                loadPage(page);
+            });
+            
+            // Navigation links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.getAttribute('href').substring(1);
+                    window.location.hash = page;
+                });
+            });
+        }
+        
+        function getPageFromHash() {
+            const hash = window.location.hash.substring(1);
+            return hash || 'overview';
+        }
+        
+        function loadPage(page) {
+            currentPage = page;
+            updateActiveNavLink();
+            
+            const content = document.getElementById('content');
+            
+            switch (page) {
+                case 'overview':
+                    content.innerHTML = renderOverview();
+                    break;
+                case 'modules':
+                    content.innerHTML = renderModules();
+                    break;
+                case 'quickstart':
+                    content.innerHTML = renderQuickStart();
+                    break;
+                case 'registry':
+                    content.innerHTML = renderRegistry();
+                    break;
+                default:
+                    if (page.startsWith('module-')) {
+                        const moduleName = page.replace('module-', '');
+                        content.innerHTML = renderModuleDetail(moduleName);
+                    } else {
+                        content.innerHTML = renderOverview();
+                    }
+            }
+            
+            // Re-run Prism highlighting
+            if (window.Prism) {
+                Prism.highlightAll();
+            }
+        }
+        
+        function updateActiveNavLink() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + currentPage) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Page renderers
+        function renderOverview() {
+            return `
+                <div class="prose max-w-none">
+                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 1rem;">Overview</h2>
+                    
+                    <p style="font-size: 1.125rem; margin-bottom: 2rem;">
+                        Unity Terraform Modules provide reusable infrastructure components designed specifically for 
+                        Unity Science Data System applications. These modules follow Unity best practices for security, 
+                        tagging, monitoring, and cost optimization.
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 1.5rem; border-radius: 0.5rem;">
+                            <h3 style="margin-bottom: 0.5rem;">🔒 Security First</h3>
+                            <p style="opacity: 0.9;">All modules implement security best practices by default</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; padding: 1.5rem; border-radius: 0.5rem;">
+                            <h3 style="margin-bottom: 0.5rem;">🏷️ Consistent Tagging</h3>
+                            <p style="opacity: 0.9;">Standardized tagging for cost tracking and resource management</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: white; padding: 1.5rem; border-radius: 0.5rem;">
+                            <h3 style="margin-bottom: 0.5rem;">📊 Monitoring Ready</h3>
+                            <p style="opacity: 0.9;">Built-in CloudWatch monitoring and logging capabilities</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); color: white; padding: 1.5rem; border-radius: 0.5rem;">
+                            <h3 style="margin-bottom: 0.5rem;">🔧 Unity Integration</h3>
+                            <p style="opacity: 0.9;">Seamless integration with Unity Management Console</p>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Quick Example</h3>
+                    
+                    <pre><code class="language-hcl"># Create a secure S3 bucket with Unity best practices
+module "unity_bucket" {
+  source = "github.com/unity-sds/unity-terraform-modules//modules/s3?ref=v1.0.0"
+
+  bucket_name = "unity-example-bucket"
+  environment = "dev"
+  project     = "unity"
+  
+  enable_standard_lifecycle = true
+}
+
+# Create VPC with public and private subnets
+module "unity_vpc" {
+  source = "github.com/unity-sds/unity-terraform-modules//modules/vpc?ref=v1.0.0"
+
+  vpc_cidr           = "10.0.0.0/16"
+  name_prefix        = "unity-dev"
+  availability_zones = ["us-west-2a", "us-west-2b"]
+}</code></pre>
+                    
+                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid var(--unity-blue); margin: 2rem 0;">
+                        <h4 style="color: var(--unity-blue); margin-bottom: 0.5rem;">💡 Integration with Unity Management Console</h4>
+                        <p style="margin-bottom: 0;">
+                            These modules are designed to work seamlessly with the 
+                            <a href="https://github.com/unity-sds/unity-management-console" style="color: var(--unity-blue);">Unity Management Console</a>. 
+                            The console can automatically discover and use these modules through the module registry.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderModules() {
+            if (!moduleRegistry) return '<p>Loading modules...</p>';
+            
+            const modules = Object.entries(moduleRegistry.modules);
+            const categories = moduleRegistry.categories || {};
+            
+            let html = '<h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 2rem;">Available Modules</h2>';
+            
+            // Render by category
+            Object.entries(categories).forEach(([categoryKey, category]) => {
+                const categoryModules = modules.filter(([moduleName, moduleData]) => 
+                    moduleData.category === categoryKey
+                );
+                
+                if (categoryModules.length === 0) return;
+                
+                html += `
+                    <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">${category.name}</h3>
+                    <p style="color: var(--unity-gray); margin-bottom: 1.5rem;">${category.description}</p>
+                    <div class="module-grid">
+                `;
+                
+                categoryModules.forEach(([moduleName, moduleData]) => {
+                    html += `
+                        <div class="module-card" onclick="window.location.hash = 'module-${moduleName}'">
+                            <h3>${moduleName}</h3>
+                            <p>${moduleData.description}</p>
+                            <div class="module-tags">
+                                ${(moduleData.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            });
+            
+            return html;
+        }
+        
+        function renderQuickStart() {
+            if (!moduleRegistry) return '<p>Loading...</p>';
+            
+            const quickstart = moduleRegistry.quickstart || {};
+            
+            return `
+                <h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 2rem;">Quick Start</h2>
+                
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">Getting Started</h3>
+                    <ol style="margin-left: 1.5rem;">
+                        ${(quickstart.steps || []).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+                    </ol>
+                </div>
+                
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Complete Infrastructure Example</h3>
+                <p style="margin-bottom: 1rem;">This example shows how to use multiple modules together to create a complete infrastructure setup:</p>
+                
+                <pre><code class="language-hcl">${quickstart.example?.code || ''}</code></pre>
+                
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Unity Management Console Integration</h3>
+                <p style="margin-bottom: 1rem;">Reference modules in your application installations:</p>
+                
+                <pre><code class="language-json">{
+  "moduleReferences": {
+    "data_bucket": {
+      "source": "unity-s3",
+      "version": "1.0.0",
+      "inputs": {
+        "bucket_name": "my-unity-data-bucket",
+        "environment": "dev",
+        "enable_standard_lifecycle": true
+      }
+    },
+    "network": {
+      "source": "unity-vpc", 
+      "version": "1.0.0",
+      "inputs": {
+        "vpc_cidr": "10.0.0.0/16",
+        "name_prefix": "my-unity",
+        "availability_zones": ["us-west-2a", "us-west-2b"]
+      }
+    }
+  }
+}</code></pre>
+            `;
+        }
+        
+        function renderRegistry() {
+            if (!moduleRegistry) return '<p>Loading...</p>';
+            
+            return `
+                <h2 style="color: var(--unity-blue); font-size: 2rem; margin-bottom: 2rem;">Module Registry</h2>
+                
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+                    <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">Registry Information</h3>
+                    <ul style="margin-left: 1.5rem;">
+                        <li><strong>Name:</strong> ${moduleRegistry.metadata.name}</li>
+                        <li><strong>Description:</strong> ${moduleRegistry.metadata.description}</li>
+                        <li><strong>Last Updated:</strong> ${new Date(moduleRegistry.metadata.last_updated).toLocaleString()}</li>
+                        <li><strong>Repository:</strong> <a href="${moduleRegistry.metadata.repository}" style="color: var(--unity-blue);">${moduleRegistry.metadata.repository}</a></li>
+                    </ul>
+                </div>
+                
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Registry URL</h3>
+                <p style="margin-bottom: 1rem;">Use this URL to access the module registry directly:</p>
+                
+                <pre><code>https://raw.githubusercontent.com/unity-sds/unity-terraform-modules/main/module-registry.json</code></pre>
+                
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Raw Registry Data</h3>
+                <pre><code class="language-json">${JSON.stringify(moduleRegistry, null, 2)}</code></pre>
+            `;
+        }
+        
+        function renderModuleDetail(moduleName) {
+            if (!moduleRegistry) return '<p>Loading...</p>';
+            
+            const moduleData = moduleRegistry.modules[moduleName];
+            if (!moduleData) {
+                return '<h2>Module not found</h2><p>The requested module does not exist.</p>';
+            }
+            
+            let html = `
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <button onclick="window.history.back()" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">← Back</button>
+                    <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">${moduleName}</h2>
+                </div>
+                
+                <p style="font-size: 1.125rem; margin-bottom: 2rem;">${moduleData.description}</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
+                        <strong>Category:</strong> ${moduleData.category}
+                    </div>
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
+                        <strong>Source:</strong> <code>${moduleData.source}</code>
+                    </div>
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
+                        <strong>Documentation:</strong> <a href="${moduleData.documentation}" style="color: var(--unity-blue);">View Docs</a>
+                    </div>
+                </div>
+            `;
+            
+            if (moduleData.tags && moduleData.tags.length > 0) {
+                html += `
+                    <div style="margin-bottom: 2rem;">
+                        <strong>Tags:</strong>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
+                            ${moduleData.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Usage examples
+            if (moduleData.examples && moduleData.examples.length > 0) {
+                html += '<h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Examples</h3>';
+                
+                moduleData.examples.forEach(example => {
+                    html += `
+                        <div style="margin-bottom: 2rem;">
+                            <h4 style="color: var(--unity-gray-dark); margin-bottom: 0.5rem;">${example.name}</h4>
+                            <p style="color: var(--unity-gray); margin-bottom: 1rem;">${example.description}</p>
+                            <pre><code class="language-hcl">${example.code}</code></pre>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Inputs
+            if (moduleData.inputs) {
+                html += '<h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Inputs</h3>';
+                html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">';
+                html += '<tr style="background: #f8fafc;"><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Name</th><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Description</th><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Type</th><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Required</th><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Default</th></tr>';
+                
+                Object.entries(moduleData.inputs).forEach(([inputName, inputData]) => {
+                    html += `
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;"><code>${inputName}</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">${inputData.description}</td>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;"><code>${inputData.type}</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">${inputData.required ? 'Yes' : 'No'}</td>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">${inputData.default !== undefined ? `<code>${JSON.stringify(inputData.default)}</code>` : '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</table></div>';
+            }
+            
+            // Outputs
+            if (moduleData.outputs) {
+                html += '<h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Outputs</h3>';
+                html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">';
+                html += '<tr style="background: #f8fafc;"><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Name</th><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Description</th></tr>';
+                
+                Object.entries(moduleData.outputs).forEach(([outputName, outputDescription]) => {
+                    html += `
+                        <tr>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;"><code>${outputName}</code></td>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">${outputDescription}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</table></div>';
+            }
+            
+            return html;
+        }
+        
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

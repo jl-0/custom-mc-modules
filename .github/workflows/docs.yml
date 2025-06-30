@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -217,6 +217,25 @@ jobs:
           EOF
           
           echo "✅ Generated docs/llm-documentation.md"
+
+      - name: Commit generated LLM documentation
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Check if there are changes to commit
+          if [[ -n $(git status --porcelain docs/llm-documentation.md) ]]; then
+            git add docs/llm-documentation.md
+            git commit -m "Update LLM documentation
+            
+            🤖 Generated with [Claude Code](https://claude.ai/code)
+            
+            Co-Authored-By: Claude <noreply@anthropic.com>"
+            git push
+            echo "✅ LLM documentation updated and committed"
+          else
+            echo "ℹ️ No changes to LLM documentation"
+          fi
 
       - name: Validate module registry
         run: |

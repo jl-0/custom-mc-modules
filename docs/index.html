@@ -266,7 +266,6 @@
                         <li><a href="#overview" class="nav-link active">Overview</a></li>
                         <li><a href="#modules" class="nav-link">Modules</a></li>
                         <li><a href="#quickstart" class="nav-link">Quick Start</a></li>
-                        <li><a href="#llm-docs" class="nav-link">LLM Docs</a></li>
                         <li><a href="#registry" class="nav-link">Registry</a></li>
                     </ul>
                 </div>
@@ -356,9 +355,6 @@
                     break;
                 case 'quickstart':
                     content.innerHTML = renderQuickStart();
-                    break;
-                case 'llm-docs':
-                    content.innerHTML = renderLLMDocs();
                     break;
                 case 'registry':
                     content.innerHTML = renderRegistry();
@@ -456,21 +452,40 @@ module "unity_vpc" {
                         <h4 style="color: #0369a1; margin-bottom: 1rem;">🤖 For AI Assistants & LLMs</h4>
                         <p style="margin-bottom: 1rem;">
                             This documentation is optimized for Large Language Models and AI assistants. 
-                            Choose your preferred format:
+                            Every page includes a "Copy Markdown" button (📋) in the top-right corner that generates 
+                            structured, LLM-friendly documentation for that specific page.
                         </p>
+                        
+                        <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bae6fd; margin-bottom: 1rem;">
+                            <h5 style="color: #0369a1; margin-bottom: 0.5rem;">📝 How to Use Copy Markdown</h5>
+                            <ol style="margin-left: 1.5rem; line-height: 1.6;">
+                                <li>Navigate to any page (Overview, Modules, Quick Start, Registry, or specific module)</li>
+                                <li>Click the "📋 Copy Markdown" button in the top-right corner</li>
+                                <li>Paste the copied markdown into your AI conversation for context</li>
+                                <li>Ask the AI to help implement, explain, or work with these Terraform modules</li>
+                            </ol>
+                        </div>
+                        
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                             <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bae6fd;">
-                                <h5 style="color: #0369a1; margin-bottom: 0.5rem;">📋 Interactive Copy</h5>
-                                <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">Visit the <a href="#llm-docs" style="color: var(--unity-blue);">LLM Docs page</a> to copy structured markdown</p>
-                                <small style="color: #64748b;">Best for one-time use in AI conversations</small>
+                                <h5 style="color: #0369a1; margin-bottom: 0.5rem;">📋 Page-Specific Content</h5>
+                                <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">Each page generates tailored markdown with relevant examples, inputs, outputs, and usage patterns</p>
+                                <small style="color: #64748b;">Perfect for focused AI conversations</small>
                             </div>
                             <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bae6fd;">
-                                <h5 style="color: #0369a1; margin-bottom: 0.5rem;">🔗 Direct Access</h5>
+                                <h5 style="color: #0369a1; margin-bottom: 0.5rem;">🔗 Programmatic Access</h5>
                                 <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">
-                                    <a href="https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/docs/llm-documentation.md" style="color: var(--unity-blue);">LLM Documentation (Markdown)</a>
+                                    <a href="https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json" style="color: var(--unity-blue);">Module Registry (JSON)</a>
                                 </p>
-                                <small style="color: #64748b;">For automated access and integrations</small>
+                                <small style="color: #64748b;">For automated tools and integrations</small>
                             </div>
+                        </div>
+                        
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #64748b;">
+                                💡 <strong>Tip:</strong> For comprehensive module documentation, visit individual module pages and copy their markdown. 
+                                For quick overviews, use the Overview or Modules page copy buttons.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -573,174 +588,6 @@ module "unity_vpc" {
             `;
         }
         
-        function renderLLMDocs() {
-            if (!moduleRegistry) return '<p>Loading...</p>';
-            
-            // Generate LLM-friendly markdown documentation
-            let markdown = `# Unity Terraform Modules - LLM Documentation
-
-This documentation is optimized for Large Language Models (LLMs) to understand and work with Unity Terraform modules.
-
-## Quick Reference
-
-**Repository:** ${moduleRegistry.metadata.repository}
-**Last Updated:** ${moduleRegistry.metadata.last_updated}
-
-## Available Modules
-
-`;
-
-            // Add each module with structured information
-            Object.entries(moduleRegistry.modules).forEach(([moduleName, moduleData]) => {
-                markdown += `### ${moduleName}
-
-**Description:** ${moduleData.description}
-
-**Source:** \`${moduleData.source}\`
-
-**Category:** ${moduleData.category}
-
-**Tags:** ${(moduleData.tags || []).join(', ')}
-
-**Usage Example:**
-\`\`\`hcl
-module "${moduleName.replace('unity-', '')}_example" {
-  source = "${moduleData.source}?ref=main"
-  
-`;
-
-                // Add required inputs as example
-                Object.entries(moduleData.inputs || {}).forEach(([inputName, inputData]) => {
-                    if (inputData.required) {
-                        const exampleValue = getExampleValue(inputData.type, inputName);
-                        markdown += `  ${inputName} = ${exampleValue}\n`;
-                    }
-                });
-
-                markdown += `}
-\`\`\`
-
-**Required Inputs:**
-`;
-                Object.entries(moduleData.inputs || {}).forEach(([inputName, inputData]) => {
-                    if (inputData.required) {
-                        markdown += `- \`${inputName}\` (${inputData.type}): ${inputData.description}\n`;
-                    }
-                });
-
-                markdown += `
-**Optional Inputs:**
-`;
-                Object.entries(moduleData.inputs || {}).forEach(([inputName, inputData]) => {
-                    if (!inputData.required) {
-                        const defaultValue = inputData.default !== undefined ? ` (default: \`${JSON.stringify(inputData.default)}\`)` : '';
-                        markdown += `- \`${inputName}\` (${inputData.type}): ${inputData.description}${defaultValue}\n`;
-                    }
-                });
-
-                markdown += `
-**Outputs:**
-`;
-                Object.entries(moduleData.outputs || {}).forEach(([outputName, outputDescription]) => {
-                    markdown += `- \`${outputName}\`: ${outputDescription}\n`;
-                });
-
-                markdown += `\n---\n\n`;
-            });
-
-            markdown += `## Integration Patterns
-
-### Basic Infrastructure Setup
-\`\`\`hcl
-# Complete infrastructure with VPC and S3
-module "vpc" {
-  source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
-  
-  vpc_cidr           = "10.0.0.0/16"
-  name_prefix        = "my-app"
-  availability_zones = ["us-west-2a", "us-west-2b"]
-}
-
-module "data_bucket" {
-  source = "github.com/jl-0/custom-mc-modules//modules/s3?ref=main"
-  
-  bucket_name = "my-app-data-bucket"
-  environment = "prod"
-}
-\`\`\`
-
-### Variable References Between Modules
-\`\`\`hcl
-# Use VPC outputs in other modules
-module "vpc" {
-  source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
-  # ... configuration
-}
-
-# Reference VPC outputs (for future RDS module)
-# vpc_id = module.vpc.vpc_id
-# subnet_ids = module.vpc.private_subnet_ids
-\`\`\`
-
-## LLM Implementation Guidelines
-
-When helping users implement these modules:
-
-1. **Always use the latest source reference:** \`?ref=main\`
-2. **Include required inputs:** Check the Required Inputs section for each module
-3. **Suggest appropriate defaults:** Use the documented defaults for optional inputs
-4. **Consider dependencies:** VPC should be created before other networking-dependent resources
-5. **Follow naming conventions:** Use consistent prefixes and environments
-6. **Add appropriate tags:** Include environment, project, and purpose tags
-
-## Common Use Cases
-
-### Development Environment
-- Use smaller instance types and simplified configurations
-- Enable development-friendly settings
-- Use \`environment = "dev"\`
-
-### Production Environment  
-- Enable all security features
-- Use production-grade instance types
-- Enable monitoring and logging
-- Use \`environment = "prod"\`
-
-### Data Processing Pipeline
-- S3 bucket for data storage with lifecycle rules
-- VPC with private subnets for compute resources
-- Enable standard Unity lifecycle management
-`;
-
-            return `
-                <div style="max-width: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                        <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">LLM Documentation</h2>
-                        <button onclick="copyMarkdownToClipboard(this, 'llm-markdown')" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
-                    </div>
-                    
-                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid var(--unity-blue); margin-bottom: 2rem;">
-                        <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">🤖 For AI Assistants</h3>
-                        <p style="margin-bottom: 0.5rem;">This page provides structured documentation optimized for Large Language Models to understand and work with Unity Terraform modules.</p>
-                        <p style="margin-bottom: 0;">The markdown format below can be copied and used as context when asking AI assistants to help implement infrastructure using these modules.</p>
-                    </div>
-                    
-                    <div style="position: relative;">
-                        <pre id="llm-markdown" style="background: #1e293b; color: #e2e8f0; padding: 1.5rem; border-radius: 0.5rem; white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto; line-height: 1.5;"><code>${escapeHtml(markdown)}</code></pre>
-                    </div>
-                    
-                    <div style="margin-top: 2rem; padding: 1.5rem; background: #f0f9ff; border-radius: 0.5rem; border-left: 4px solid #0ea5e9;">
-                        <h4 style="color: #0369a1; margin-bottom: 1rem;">💡 Usage Tips</h4>
-                        <ul style="margin-left: 1.5rem; line-height: 1.8;">
-                            <li>Copy the markdown above and paste it into your AI conversation for context</li>
-                            <li>Ask the AI to create Terraform configurations using these modules</li>
-                            <li>Request explanations of module inputs, outputs, and best practices</li>
-                            <li>Get help with module integration patterns and variable references</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-        }
         
         // Helper function to generate example values based on type and name
         function getExampleValue(type, name) {

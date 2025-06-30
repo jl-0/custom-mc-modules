@@ -224,9 +224,15 @@ resource "aws_s3_bucket_replication_configuration" "main" {
       }
 
       destination {
-        bucket             = rule.value.destination.bucket
-        storage_class      = rule.value.destination.storage_class
-        replica_kms_key_id = rule.value.destination.replica_kms_key_id
+        bucket        = rule.value.destination.bucket
+        storage_class = rule.value.destination.storage_class
+
+        dynamic "encryption_configuration" {
+          for_each = rule.value.destination.replica_kms_key_id != null ? [rule.value.destination.replica_kms_key_id] : []
+          content {
+            replica_kms_key_id = encryption_configuration.value
+          }
+        }
       }
 
       dynamic "delete_marker_replication" {

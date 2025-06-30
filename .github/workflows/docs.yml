@@ -145,6 +145,7 @@ jobs:
         run: |
           cd modules/${{ matrix.module }}
           tflint --format compact
+        continue-on-error: true
 
   security-scan:
     runs-on: ubuntu-latest

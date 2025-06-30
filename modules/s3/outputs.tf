@@ -32,12 +32,12 @@ output "bucket_region" {
 
 output "bucket_website_endpoint" {
   description = "The website endpoint, if the bucket is configured with a website"
-  value       = try(aws_s3_bucket_website_configuration.main[0].website_endpoint, null)
+  value       = var.website_configuration != null ? aws_s3_bucket.main.website_endpoint : null
 }
 
 output "bucket_website_domain" {
   description = "The domain of the website endpoint"
-  value       = try(aws_s3_bucket_website_configuration.main[0].website_domain, null)
+  value       = var.website_configuration != null ? aws_s3_bucket.main.website_domain : null
 }
 
 # Versioning outputs

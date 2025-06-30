@@ -3,9 +3,9 @@
 variable "bucket_name" {
   description = "Name of the S3 bucket"
   type        = string
-  
+
   validation {
-    condition = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.bucket_name)) && length(var.bucket_name) >= 3 && length(var.bucket_name) <= 63
+    condition     = can(regex("^[a-z0-9][a-z0-9-]*[a-z0-9]$", var.bucket_name)) && length(var.bucket_name) >= 3 && length(var.bucket_name) <= 63
     error_message = "Bucket name must be between 3 and 63 characters, start and end with lowercase letters or numbers, and contain only lowercase letters, numbers, and hyphens."
   }
 }
@@ -142,9 +142,9 @@ variable "replication_configuration" {
         tags   = optional(map(string))
       }))
       destination = object({
-        bucket               = string
-        storage_class        = optional(string)
-        replica_kms_key_id   = optional(string)
+        bucket             = string
+        storage_class      = optional(string)
+        replica_kms_key_id = optional(string)
       })
       delete_marker_replication_status = optional(string)
     }))
@@ -205,7 +205,7 @@ variable "request_payer" {
   description = "Specifies who should bear the cost of Amazon S3 data transfer"
   type        = string
   default     = "BucketOwner"
-  
+
   validation {
     condition     = contains(["BucketOwner", "Requester"], var.request_payer)
     error_message = "Request payer must be either 'BucketOwner' or 'Requester'."

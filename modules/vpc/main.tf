@@ -18,7 +18,7 @@ locals {
     Environment = var.environment
     Project     = var.project
   })
-  
+
   # Calculate subnet CIDRs
   public_subnet_cidrs  = [for i in range(length(var.availability_zones)) : cidrsubnet(var.vpc_cidr, 8, i)]
   private_subnet_cidrs = [for i in range(length(var.availability_zones)) : cidrsubnet(var.vpc_cidr, 8, i + 10)]

@@ -3,7 +3,7 @@
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
-  
+
   validation {
     condition     = can(cidrhost(var.vpc_cidr, 0))
     error_message = "VPC CIDR must be a valid IPv4 CIDR block."
@@ -18,7 +18,7 @@ variable "name_prefix" {
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  
+
   validation {
     condition     = length(var.availability_zones) >= 1
     error_message = "At least one availability zone must be specified."
@@ -113,7 +113,7 @@ variable "flow_log_traffic_type" {
   description = "Traffic type for VPC Flow Logs"
   type        = string
   default     = "ALL"
-  
+
   validation {
     condition     = contains(["ACCEPT", "REJECT", "ALL"], var.flow_log_traffic_type)
     error_message = "Flow log traffic type must be one of: ACCEPT, REJECT, ALL."
@@ -236,12 +236,12 @@ variable "private_dedicated_network_acl" {
 variable "vpc_endpoints" {
   description = "Map of VPC endpoints to create"
   type = map(object({
-    service         = string
-    type           = string
-    route_table_ids = optional(list(string))
-    subnet_ids     = optional(list(string))
+    service            = string
+    type               = string
+    route_table_ids    = optional(list(string))
+    subnet_ids         = optional(list(string))
     security_group_ids = optional(list(string))
-    policy         = optional(string)
+    policy             = optional(string)
   }))
   default = {}
 }

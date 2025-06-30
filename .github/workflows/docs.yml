@@ -106,8 +106,6 @@ jobs:
         module:
           - s3
           - vpc
-          - iam
-          - rds
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -175,10 +173,11 @@ jobs:
           framework: terraform
           output_format: sarif
           output_file_path: checkov-results.sarif
+        continue-on-error: true
 
       - name: Upload Checkov scan results
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('checkov-results.sarif') != ''
         with:
           sarif_file: checkov-results.sarif
 

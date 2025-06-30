@@ -210,7 +210,7 @@ output "subnet_mapping" {
   description = "Map of subnet types to their IDs and AZs"
   value = {
     public = {
-      for i, subnet in aws_subnet.public : 
+      for i, subnet in aws_subnet.public :
       var.availability_zones[i] => {
         id         = subnet.id
         cidr_block = subnet.cidr_block
@@ -218,7 +218,7 @@ output "subnet_mapping" {
       }
     }
     private = {
-      for i, subnet in aws_subnet.private : 
+      for i, subnet in aws_subnet.private :
       var.availability_zones[i] => {
         id         = subnet.id
         cidr_block = subnet.cidr_block
@@ -238,8 +238,8 @@ output "network_summary" {
     public_subnets     = length(aws_subnet.public)
     private_subnets    = length(aws_subnet.private)
     nat_gateways       = length(aws_nat_gateway.main)
-    has_igw           = var.create_igw
-    has_vpn_gateway   = var.enable_vpn_gateway
+    has_igw            = var.create_igw
+    has_vpn_gateway    = var.enable_vpn_gateway
   }
 }
 

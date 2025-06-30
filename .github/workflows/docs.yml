@@ -64,6 +64,160 @@ jobs:
             terraform-docs json "$module_dir" > "docs/static/modules/${module_name}.json"
           done
 
+      - name: Generate LLM-friendly documentation
+        run: |
+          echo "Generating LLM documentation from module registry..."
+          
+          # Create the LLM documentation markdown file
+          cat > docs/llm-documentation.md << 'EOF'
+          # Unity Terraform Modules - LLM Documentation
+
+          This documentation is optimized for Large Language Models (LLMs) to understand and work with Unity Terraform modules.
+
+          ## Quick Reference
+
+          **Repository:** $(jq -r '.metadata.repository' module-registry.json)
+          **Last Updated:** $(jq -r '.metadata.last_updated' module-registry.json)
+          **Documentation URL:** https://jl-0.github.io/custom-mc-modules
+
+          ## Available Modules
+
+          EOF
+          
+          # Generate documentation for each module
+          for module_key in $(jq -r '.modules | keys[]' module-registry.json); do
+            echo "Generating docs for module: $module_key"
+            
+            # Extract module data
+            description=$(jq -r ".modules[\"$module_key\"].description" module-registry.json)
+            source=$(jq -r ".modules[\"$module_key\"].source" module-registry.json)
+            category=$(jq -r ".modules[\"$module_key\"].category" module-registry.json)
+            tags=$(jq -r ".modules[\"$module_key\"].tags | join(\", \")" module-registry.json)
+            
+            cat >> docs/llm-documentation.md << EOF
+          ### $module_key
+
+          **Description:** $description
+
+          **Source:** \`$source\`
+
+          **Category:** $category
+
+          **Tags:** $tags
+
+          **Usage Example:**
+          \`\`\`hcl
+          module "${module_key/unity-/}_example" {
+            source = "$source?ref=main"
+            
+          EOF
+            
+            # Add required inputs as example
+            jq -r ".modules[\"$module_key\"].inputs | to_entries[] | select(.value.required == true) | \"  \" + .key + \" = \\\"example-value\\\"\"" module-registry.json >> docs/llm-documentation.md
+            
+            cat >> docs/llm-documentation.md << EOF
+          }
+          \`\`\`
+
+          **Required Inputs:**
+          EOF
+            
+            # Add required inputs documentation
+            jq -r ".modules[\"$module_key\"].inputs | to_entries[] | select(.value.required == true) | \"- \`\" + .key + \"\` (\" + .value.type + \"): \" + .value.description" module-registry.json >> docs/llm-documentation.md
+            
+            cat >> docs/llm-documentation.md << EOF
+
+          **Optional Inputs:**
+          EOF
+            
+            # Add optional inputs documentation
+            jq -r ".modules[\"$module_key\"].inputs | to_entries[] | select(.value.required != true) | \"- \`\" + .key + \"\` (\" + .value.type + \"): \" + .value.description + (if .value.default != null then \" (default: \`\" + (.value.default | tostring) + \"\`)\" else \"\" end)" module-registry.json >> docs/llm-documentation.md
+            
+            cat >> docs/llm-documentation.md << EOF
+
+          **Outputs:**
+          EOF
+            
+            # Add outputs documentation
+            jq -r ".modules[\"$module_key\"].outputs | to_entries[] | \"- \`\" + .key + \"\`: \" + .value" module-registry.json >> docs/llm-documentation.md
+            
+            echo -e "\n---\n" >> docs/llm-documentation.md
+          done
+          
+          # Add integration patterns and guidelines
+          cat >> docs/llm-documentation.md << 'EOF'
+          ## Integration Patterns
+
+          ### Basic Infrastructure Setup
+          ```hcl
+          # Complete infrastructure with VPC and S3
+          module "vpc" {
+            source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
+            
+            vpc_cidr           = "10.0.0.0/16"
+            name_prefix        = "my-app"
+            availability_zones = ["us-west-2a", "us-west-2b"]
+          }
+
+          module "data_bucket" {
+            source = "github.com/jl-0/custom-mc-modules//modules/s3?ref=main"
+            
+            bucket_name = "my-app-data-bucket"
+            environment = "prod"
+          }
+          ```
+
+          ### Variable References Between Modules
+          ```hcl
+          # Use VPC outputs in other modules
+          module "vpc" {
+            source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
+            # ... configuration
+          }
+
+          # Reference VPC outputs (for future RDS module)
+          # vpc_id = module.vpc.vpc_id
+          # subnet_ids = module.vpc.private_subnet_ids
+          ```
+
+          ## LLM Implementation Guidelines
+
+          When helping users implement these modules:
+
+          1. **Always use the latest source reference:** `?ref=main`
+          2. **Include required inputs:** Check the Required Inputs section for each module
+          3. **Suggest appropriate defaults:** Use the documented defaults for optional inputs
+          4. **Consider dependencies:** VPC should be created before other networking-dependent resources
+          5. **Follow naming conventions:** Use consistent prefixes and environments
+          6. **Add appropriate tags:** Include environment, project, and purpose tags
+
+          ## Common Use Cases
+
+          ### Development Environment
+          - Use smaller instance types and simplified configurations
+          - Enable development-friendly settings
+          - Use `environment = "dev"`
+
+          ### Production Environment  
+          - Enable all security features
+          - Use production-grade instance types
+          - Enable monitoring and logging
+          - Use `environment = "prod"`
+
+          ### Data Processing Pipeline
+          - S3 bucket for data storage with lifecycle rules
+          - VPC with private subnets for compute resources
+          - Enable standard Unity lifecycle management
+
+          ## Access Methods
+
+          - **Interactive Copy:** Visit https://jl-0.github.io/custom-mc-modules/#llm-docs
+          - **Direct Access:** https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/docs/llm-documentation.md
+          - **Module Registry JSON:** https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json
+          EOF
+          
+          echo "✅ Generated docs/llm-documentation.md"
+
       - name: Validate module registry
         run: |
           # Validate JSON syntax
@@ -85,7 +239,7 @@ jobs:
       - name: Upload documentation artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/dist
+          path: docs
 
   deploy-docs:
     if: github.ref == 'refs/heads/main'

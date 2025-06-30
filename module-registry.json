@@ -13,7 +13,7 @@
     "unity-s3": {
       "description": "Unity S3 bucket with security best practices and lifecycle management",
       "source": "github.com/jl-0/custom-mc-modules//modules/s3",
-      "documentation": "https://jl-0.github.io/custom-mc-modules/modules/s3",
+      "documentation": "https://github.com/jl-0/custom-mc-modules/blob/main/modules/s3/README.md",
       "category": "storage",
       "tags": ["s3", "storage", "security", "lifecycle"],
       "versions": {
@@ -110,7 +110,7 @@
     "unity-vpc": {
       "description": "Unity VPC with public/private subnets across multiple AZs",
       "source": "github.com/jl-0/custom-mc-modules//modules/vpc",
-      "documentation": "https://jl-0.github.io/custom-mc-modules/modules/vpc",
+      "documentation": "https://github.com/jl-0/custom-mc-modules/blob/main/modules/vpc/README.md",
       "category": "networking",
       "tags": ["vpc", "networking", "subnets", "nat"],
       "versions": {

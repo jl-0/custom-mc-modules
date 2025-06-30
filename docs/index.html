@@ -473,11 +473,12 @@ module "unity_vpc" {
                                 <small style="color: #64748b;">Perfect for focused AI conversations</small>
                             </div>
                             <div style="background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bae6fd;">
-                                <h5 style="color: #0369a1; margin-bottom: 0.5rem;">🔗 Programmatic Access</h5>
+                                <h5 style="color: #0369a1; margin-bottom: 0.5rem;">🔗 Direct Access URLs</h5>
                                 <p style="margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                    <a href="https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/docs/llm-documentation.md" style="color: var(--unity-blue);">Complete LLM Docs (Markdown)</a><br>
                                     <a href="https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json" style="color: var(--unity-blue);">Module Registry (JSON)</a>
                                 </p>
-                                <small style="color: #64748b;">For automated tools and integrations</small>
+                                <small style="color: #64748b;">For automated tools and direct AI access</small>
                             </div>
                         </div>
                         
@@ -856,7 +857,7 @@ ${example.code}
                         <strong>Source:</strong> <code>${moduleData.source}</code>
                     </div>
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
-                        <strong>Documentation:</strong> <a href="${moduleData.documentation}" style="color: var(--unity-blue);">View Docs</a>
+                        <strong>Documentation:</strong> <a href="https://github.com/jl-0/custom-mc-modules/blob/main/modules/${moduleName.replace('unity-', '')}/README.md" target="_blank" style="color: var(--unity-blue);">View README</a>
                     </div>
                 </div>
             `;

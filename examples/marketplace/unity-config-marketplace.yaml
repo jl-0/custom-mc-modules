@@ -1,0 +1,170 @@
+# Unity Management Console configuration for marketplace deployment
+# This configuration demonstrates how to deploy a marketplace application using Unity modules
+
+# AWS Configuration
+awsregion: "us-west-2"
+bucketname: "unity-marketplace-terraform-state-dev"
+
+# Project Configuration  
+project: "marketplace-demo"
+venue: "dev"
+installprefix: "unity-marketplace"
+
+# Console Configuration
+consolehost: "http://localhost:8080"
+basepath: "http://localhost"
+
+# Working Directory - where temporary files and module downloads are stored
+workdir: "/home/ubuntu/unity-marketplace-workdir"
+
+# Marketplace Configuration - references the Unity terraform modules
+marketplacebaseurl: "https://raw.githubusercontent.com/"
+marketplaceowner: "unity-sds"
+marketplacerepo: "unity-terraform-modules"
+
+# Module Registry Configuration
+# Use the local module registry for this marketplace example
+moduleregistrypath: "./module-registry.json"
+
+# Core Infrastructure Applications for Bootstrap
+# These provide the foundation for running a marketplace
+MarketplaceItems:
+  - name: unity-proxy
+    version: "0.5.0"
+    description: "Unity proxy for secure communication"
+  - name: unity-apigateway
+    version: "0.3.0"
+    description: "API Gateway for marketplace APIs"
+  - name: unity-cs-monitoring-lambda
+    version: "1.1.0"
+    description: "CloudWatch monitoring and alerting"
+  - name: marketplace-demo
+    version: "1.0.0"
+    description: "Main marketplace application with S3 storage"
+    config: "./install-marketplace-app.json"
+
+# SSM Parameters for marketplace configuration
+defaultssmparameters:
+  # Project identification
+  - name: "/unity/marketplace/project"
+    value: "marketplace-demo"
+  - name: "/unity/marketplace/venue"
+    value: "dev"
+  - name: "/unity/marketplace/environment"
+    value: "dev"
+  
+  # S3 Configuration
+  - name: "/unity/marketplace/s3/user_uploads_bucket"
+    value: "unity-marketplace-user-uploads-dev"
+  - name: "/unity/marketplace/s3/data_bucket"
+    value: "unity-marketplace-data-dev"
+  - name: "/unity/marketplace/s3/static_assets_bucket"
+    value: "unity-marketplace-static-dev"
+  
+  # Security Configuration
+  - name: "/unity/marketplace/encryption_key_id"
+    value: "alias/unity-marketplace-key"
+  - name: "/unity/marketplace/cognito/app_client_id"
+    value: "marketplace-cognito-client-id"
+  
+  # API Configuration
+  - name: "/unity/marketplace/api/base_url"
+    value: "https://api.marketplace.unity.example.com"
+  - name: "/unity/shared_services_api_key"
+    value: "your-shared-services-api-key"
+  
+  # Monitoring Configuration
+  - name: "/unity/marketplace/monitoring/dashboard_name"
+    value: "Unity-Marketplace-Dashboard"
+  - name: "/unity/marketplace/logging/log_group"
+    value: "/aws/lambda/unity-marketplace"
+  
+  # Cost Management
+  - name: "/unity/marketplace/cost_center"
+    value: "engineering"
+  - name: "/unity/marketplace/owner"
+    value: "marketplace-team"
+
+# Terraform Configuration
+terraform:
+  # Backend configuration for state management
+  backend:
+    bucket: "unity-marketplace-terraform-state-dev"
+    key: "marketplace/terraform.tfstate"
+    region: "us-west-2"
+    encrypt: true
+    dynamodb_table: "unity-marketplace-terraform-locks"
+  
+  # Provider configuration
+  providers:
+    aws:
+      region: "us-west-2"
+      default_tags:
+        Project: "marketplace-demo"
+        Environment: "dev"
+        ManagedBy: "unity-management-console"
+        Owner: "marketplace-team"
+        CostCenter: "engineering"
+
+# Environment-specific overrides
+environments:
+  dev:
+    # Development-specific settings
+    bucketname: "unity-marketplace-terraform-state-dev"
+    installprefix: "unity-marketplace-dev"
+    s3_lifecycle_days: 30  # Shorter lifecycle for dev
+    monitoring_enabled: true
+    backup_enabled: false
+    
+  staging:
+    # Staging-specific settings  
+    bucketname: "unity-marketplace-terraform-state-staging"
+    installprefix: "unity-marketplace-staging"
+    s3_lifecycle_days: 90
+    monitoring_enabled: true
+    backup_enabled: true
+    
+  prod:
+    # Production-specific settings
+    awsregion: "us-east-1"  # Different region for prod
+    bucketname: "unity-marketplace-terraform-state-prod"
+    installprefix: "unity-marketplace-prod"
+    s3_lifecycle_days: 365
+    monitoring_enabled: true
+    backup_enabled: true
+    replication_enabled: true
+
+# Feature flags for different marketplace capabilities
+features:
+  user_uploads: true
+  virus_scanning: true
+  content_moderation: false
+  analytics: true
+  caching: true
+  cdn: true
+  search: false
+  recommendations: false
+
+# Resource limits and quotas
+limits:
+  max_upload_size_mb: 100
+  max_storage_per_user_gb: 10
+  max_concurrent_uploads: 5
+  api_rate_limit_per_minute: 1000
+
+# Integration settings
+integrations:
+  cloudwatch:
+    enabled: true
+    log_retention_days: 30
+    metrics_enabled: true
+  
+  cloudtrail:
+    enabled: true
+    include_global_service_events: true
+    
+  guardduty:
+    enabled: false  # Enable in production
+    
+  config:
+    enabled: false  # Enable for compliance monitoring

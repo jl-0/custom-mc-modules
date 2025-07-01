@@ -48,7 +48,7 @@ locals {
 
 # User Uploads Bucket - For user-generated content
 module "user_uploads_bucket" {
-  source  = "management-console.com/unity/s3/aws"
+  source  = "management-console.com/infrastructure/s3/unity"
   version = "~> 1.0"
   
   bucket_name         = "${local.name_prefix}-user-uploads"

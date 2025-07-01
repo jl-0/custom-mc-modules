@@ -6,10 +6,11 @@
     "last_updated": "2025-07-01T00:00:00Z"
   },
   "modules": {
-    "unity-s3": {
+    "infrastructure-s3": {
       "description": "Unity S3 bucket with security best practices and lifecycle management",
       "source": "github.com/jl-0/custom-mc-modules//modules/s3",
       "documentation": "https://github.com/jl-0/custom-mc-modules/blob/main/modules/s3/README.md",
+      "provider" : "unity",
       "versions": {
         "1.0.0": {
           "ref": "v1.0.0",
@@ -99,10 +100,11 @@
         }
       }
     },
-    "unity-vpc": {
+    "infrastructure-vpc": {
       "description": "Unity VPC with public/private subnets across multiple AZs",
       "source": "github.com/jl-0/custom-mc-modules//modules/vpc",
       "documentation": "https://github.com/jl-0/custom-mc-modules/blob/main/modules/vpc/README.md",
+      "provider" : "unity",
       "versions": {
         "1.0.0": {
           "ref": "v1.0.0",

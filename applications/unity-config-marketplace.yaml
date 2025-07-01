@@ -19,71 +19,17 @@ workdir: "/home/ubuntu/unity-marketplace-workdir"
 
 # Marketplace Configuration - references the Unity terraform modules
 marketplacebaseurl: "https://raw.githubusercontent.com/"
-marketplaceowner: "unity-sds"
-marketplacerepo: "unity-terraform-modules"
+marketplaceowner: "jl-0"
+marketplacerepo: "custom-mc-modules"
 
-# Module Registry Configuration
-# Use the local module registry for this marketplace example
-moduleregistrypath: "./module-registry.json"
 
 # Core Infrastructure Applications for Bootstrap
 # These provide the foundation for running a marketplace
 MarketplaceItems:
-  - name: unity-proxy
-    version: "0.5.0"
-    description: "Unity proxy for secure communication"
-  - name: unity-apigateway
-    version: "0.3.0"
-    description: "API Gateway for marketplace APIs"
-  - name: unity-cs-monitoring-lambda
-    version: "1.1.0"
-    description: "CloudWatch monitoring and alerting"
-  - name: marketplace-demo
-    version: "1.0.0"
-    description: "Main marketplace application with S3 storage"
-    config: "./install-marketplace-app.json"
+  - name: simple-demo
+    version: "v1.0"
+    description: "Simple demo of S3 module usage"
 
-# SSM Parameters for marketplace configuration
-defaultssmparameters:
-  # Project identification
-  - name: "/unity/marketplace/project"
-    value: "marketplace-demo"
-  - name: "/unity/marketplace/venue"
-    value: "dev"
-  - name: "/unity/marketplace/environment"
-    value: "dev"
-  
-  # S3 Configuration
-  - name: "/unity/marketplace/s3/user_uploads_bucket"
-    value: "unity-marketplace-user-uploads-dev"
-  - name: "/unity/marketplace/s3/data_bucket"
-    value: "unity-marketplace-data-dev"
-  - name: "/unity/marketplace/s3/static_assets_bucket"
-    value: "unity-marketplace-static-dev"
-  
-  # Security Configuration
-  - name: "/unity/marketplace/encryption_key_id"
-    value: "alias/unity-marketplace-key"
-  - name: "/unity/marketplace/cognito/app_client_id"
-    value: "marketplace-cognito-client-id"
-  
-  # API Configuration
-  - name: "/unity/marketplace/api/base_url"
-    value: "https://api.marketplace.unity.example.com"
-  - name: "/unity/shared_services_api_key"
-    value: "your-shared-services-api-key"
-  
-  # Monitoring Configuration
-  - name: "/unity/marketplace/monitoring/dashboard_name"
-    value: "Unity-Marketplace-Dashboard"
-  - name: "/unity/marketplace/logging/log_group"
-    value: "/aws/lambda/unity-marketplace"
-  
-  # Cost Management
-  - name: "/unity/marketplace/cost_center"
-    value: "engineering"
-  - name: "/unity/marketplace/owner"
-    value: "marketplace-team"
 
 # Terraform Configuration
 terraform:

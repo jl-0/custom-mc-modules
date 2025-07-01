@@ -293,14 +293,18 @@
     <script>
         // Application state
         let moduleRegistry = null;
+        let moduleReadmes = {};
         let currentPage = 'overview';
         
         // Initialize the application
         async function init() {
             try {
                 // Load module registry
-                const response = await fetch('https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json');
+                const response = await fetch('../module-registry.json');
                 moduleRegistry = await response.json();
+                
+                // Load README files for each module
+                await loadModuleReadmes();
                 
                 // Initialize routing
                 initRouting();
@@ -316,6 +320,38 @@
                 console.error('Failed to load module registry:', error);
                 document.getElementById('loading').innerHTML = 'Failed to load module registry. Please try again later.';
             }
+        }
+        
+        // Load README files for all modules
+        async function loadModuleReadmes() {
+            const loadPromises = Object.entries(moduleRegistry.modules).map(async ([moduleName, moduleData]) => {
+                try {
+                    // Extract module path from source
+                    const modulePath = getModulePathFromSource(moduleData.source);
+                    const readmeUrl = `https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/${modulePath}/README.md`;
+                    
+                    const response = await fetch(readmeUrl);
+                    if (response.ok) {
+                        const readmeContent = await response.text();
+                        moduleReadmes[moduleName] = readmeContent;
+                    } else {
+                        console.warn(`Failed to load README for ${moduleName}:`, response.status);
+                        moduleReadmes[moduleName] = null;
+                    }
+                } catch (error) {
+                    console.warn(`Error loading README for ${moduleName}:`, error);
+                    moduleReadmes[moduleName] = null;
+                }
+            });
+            
+            await Promise.all(loadPromises);
+        }
+        
+        // Extract module path from source URL
+        function getModulePathFromSource(source) {
+            // Convert "github.com/jl-0/custom-mc-modules//modules/s3" to "modules/s3"
+            const parts = source.split('//');
+            return parts.length > 1 ? parts[1] : 'modules/' + source.split('/').pop();
         }
         
         // Routing
@@ -417,11 +453,13 @@
                         </div>
                     </div>
                     
-                    <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Quick Example</h3>
+                    <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Module Registry Usage</h3>
+                    <p style="margin-bottom: 1rem;">Reference modules through the Unity Management Console using standard Terraform syntax:</p>
                     
                     <pre><code class="language-hcl"># Create a secure S3 bucket with Unity best practices
-module "unity_bucket" {
-  source = "github.com/jl-0/custom-mc-modules//modules/s3?ref=main"
+module "data_bucket" {
+  source  = "my-unity-console.com/unity/s3/aws"
+  version = "~> 1.0"
 
   bucket_name = "unity-example-bucket"
   environment = "dev"
@@ -431,8 +469,9 @@ module "unity_bucket" {
 }
 
 # Create VPC with public and private subnets
-module "unity_vpc" {
-  source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
+module "network" {
+  source  = "my-unity-console.com/unity/vpc/aws"
+  version = "~> 1.0"
 
   vpc_cidr           = "10.0.0.0/16"
   name_prefix        = "unity-dev"
@@ -497,51 +536,52 @@ module "unity_vpc" {
             if (!moduleRegistry) return '<p>Loading modules...</p>';
             
             const modules = Object.entries(moduleRegistry.modules);
-            const categories = moduleRegistry.categories || {};
             
             let html = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                     <h2 style="color: var(--unity-blue); font-size: 2rem; margin: 0;">Available Modules</h2>
                     <button onclick="copyPageMarkdown('modules', this)" style="background: var(--unity-blue); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">📋 Copy Markdown</button>
                 </div>
+                
+                <p style="color: var(--unity-gray); margin-bottom: 2rem;">
+                    These modules are designed for use with the Unity Management Console and follow standard Terraform Registry Protocol.
+                </p>
+                
+                <div class="module-grid">
             `;
             
-            // Render by category
-            Object.entries(categories).forEach(([categoryKey, category]) => {
-                const categoryModules = modules.filter(([moduleName, moduleData]) => 
-                    moduleData.category === categoryKey
-                );
-                
-                if (categoryModules.length === 0) return;
+            modules.forEach(([moduleName, moduleData]) => {
+                // Extract provider from module name or source
+                const provider = getProviderFromModule(moduleName, moduleData.source);
+                const registryPath = `my-unity-console.com/${moduleName.replace('-', '/')}/${provider}`;
                 
                 html += `
-                    <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">${category.name}</h3>
-                    <p style="color: var(--unity-gray); margin-bottom: 1.5rem;">${category.description}</p>
-                    <div class="module-grid">
-                `;
-                
-                categoryModules.forEach(([moduleName, moduleData]) => {
-                    html += `
-                        <div class="module-card" onclick="window.location.hash = 'module-${moduleName}'">
-                            <h3>${moduleName}</h3>
-                            <p>${moduleData.description}</p>
-                            <div class="module-tags">
-                                ${(moduleData.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    <div class="module-card" onclick="window.location.hash = 'module-${moduleName}'">
+                        <h3>${moduleName}</h3>
+                        <p>${moduleData.description}</p>
+                        <div style="margin-top: 1rem;">
+                            <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 0.25rem; margin-bottom: 0.5rem;">
+                                <code style="font-size: 0.8rem;">${registryPath}</code>
                             </div>
+                            ${moduleData.documentation ? `<a href="${moduleData.documentation}" style="color: var(--unity-blue); font-size: 0.9rem;">📖 Documentation</a>` : ''}
                         </div>
-                    `;
-                });
-                
-                html += '</div>';
+                    </div>
+                `;
             });
             
+            html += '</div>';
             return html;
+        }
+        
+        // Extract provider from module name or infer from source
+        function getProviderFromModule(moduleName, source) {
+            // For now, assume AWS since these are Unity modules
+            // In a real implementation, you might parse the versions.tf file
+            return 'aws';
         }
         
         function renderQuickStart() {
             if (!moduleRegistry) return '<p>Loading...</p>';
-            
-            const quickstart = moduleRegistry.quickstart || {};
             
             return `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
@@ -550,42 +590,57 @@ module "unity_vpc" {
                 </div>
                 
                 <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
-                    <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">Getting Started</h3>
-                    <ol style="margin-left: 1.5rem;">
-                        ${(quickstart.steps || []).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+                    <h3 style="color: var(--unity-blue); margin-bottom: 1rem;">Getting Started with Unity Management Console</h3>
+                    <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                        <li>Set up the Unity Management Console with module registry</li>
+                        <li>Choose a module from the registry below</li>
+                        <li>Reference the module in your Terraform configuration using standard registry syntax</li>
+                        <li>Configure the required inputs for your use case</li>
+                        <li>Run <code>terraform init</code> and <code>terraform apply</code></li>
                     </ol>
                 </div>
                 
-                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Complete Infrastructure Example</h3>
-                <p style="margin-bottom: 1rem;">This example shows how to use multiple modules together to create a complete infrastructure setup:</p>
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Module Registry Usage</h3>
+                <p style="margin-bottom: 1rem;">The Unity Management Console acts as a Terraform Module Registry. Reference modules using standard Terraform syntax:</p>
                 
-                <pre><code class="language-hcl">${quickstart.example?.code || ''}</code></pre>
-                
-                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Unity Management Console Integration</h3>
-                <p style="margin-bottom: 1rem;">Reference modules in your application installations:</p>
-                
-                <pre><code class="language-json">{
-  "moduleReferences": {
-    "data_bucket": {
-      "source": "unity-s3",
-      "version": "1.0.0",
-      "inputs": {
-        "bucket_name": "my-unity-data-bucket",
-        "environment": "dev",
-        "enable_standard_lifecycle": true
-      }
-    },
-    "network": {
-      "source": "unity-vpc", 
-      "version": "1.0.0",
-      "inputs": {
-        "vpc_cidr": "10.0.0.0/16",
-        "name_prefix": "my-unity",
-        "availability_zones": ["us-west-2a", "us-west-2b"]
-      }
-    }
-  }
+                <pre><code class="language-hcl"># Basic S3 bucket
+module "data_bucket" {
+  source  = "my-unity-console.com/unity/s3/aws"
+  version = "~> 1.0"
+  
+  bucket_name = "my-unity-data-bucket"
+  environment = "dev"
+  project     = "unity"
+}
+
+# VPC with subnets
+module "network" {
+  source  = "my-unity-console.com/unity/vpc/aws"
+  version = "~> 1.0"
+  
+  vpc_cidr           = "10.0.0.0/16"
+  name_prefix        = "my-unity"
+  availability_zones = ["us-west-2a", "us-west-2b"]
 }</code></pre>
+                
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Module Registry Configuration</h3>
+                <p style="margin-bottom: 1rem;">The Management Console loads modules from this registry configuration:</p>
+                
+                <pre><code class="language-bash"># Registry URL
+https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json
+
+# Local registry file location
+~/.unity/workdir/module-registry.json</code></pre>
+
+                <div style="background: #f0f9ff; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid #0ea5e9; margin: 2rem 0;">
+                    <h4 style="color: #0369a1; margin-bottom: 1rem;">🚀 How It Works</h4>
+                    <ol style="margin-left: 1.5rem; line-height: 1.6;">
+                        <li><strong>Module Registry</strong>: Management Console loads module definitions</li>
+                        <li><strong>Terraform Registry API</strong>: Exposes standard Terraform Registry Protocol endpoints</li>
+                        <li><strong>Standard Workflow</strong>: Use modules with normal <code>terraform</code> commands</li>
+                        <li><strong>Automatic Caching</strong>: Modules are downloaded and cached automatically</li>
+                    </ol>
+                </div>
             `;
         }
         
@@ -655,33 +710,35 @@ Unity Terraform Modules provide reusable infrastructure components designed spec
 - **Monitoring Ready**: Built-in CloudWatch monitoring and logging capabilities
 - **Unity Integration**: Seamless integration with Unity Management Console
 
-## Quick Example
+## Module Registry Usage
+
+The Unity Management Console acts as a Terraform Module Registry. Reference modules using standard Terraform syntax:
 
 \`\`\`hcl
-# Create a secure S3 bucket with Unity best practices
-module "unity_bucket" {
-  source = "github.com/jl-0/custom-mc-modules//modules/s3?ref=main"
-
-  bucket_name = "unity-example-bucket"
+# Basic S3 bucket
+module "data_bucket" {
+  source  = "my-unity-console.com/unity/s3/aws"
+  version = "~> 1.0"
+  
+  bucket_name = "my-unity-data-bucket"
   environment = "dev"
   project     = "unity"
-  
-  enable_standard_lifecycle = true
 }
 
-# Create VPC with public and private subnets
-module "unity_vpc" {
-  source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
-
+# VPC with subnets
+module "network" {
+  source  = "my-unity-console.com/unity/vpc/aws"
+  version = "~> 1.0"
+  
   vpc_cidr           = "10.0.0.0/16"
-  name_prefix        = "unity-dev"
+  name_prefix        = "my-unity"
   availability_zones = ["us-west-2a", "us-west-2b"]
 }
 \`\`\`
 
 ## Repository
 
-**URL**: ${moduleRegistry?.metadata?.repository || 'https://github.com/jl-0/custom-mc-modules'}
+**URL**: https://github.com/jl-0/custom-mc-modules
 **Documentation**: https://jl-0.github.io/custom-mc-modules
 **Registry JSON**: https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json`;
                     break;
@@ -692,12 +749,15 @@ module "unity_vpc" {
 `;
                     if (moduleRegistry?.modules) {
                         Object.entries(moduleRegistry.modules).forEach(([moduleName, moduleInfo]) => {
+                            const provider = getProviderFromModule(moduleName, moduleInfo.source);
+                            const registryPath = `my-unity-console.com/${moduleName.replace('-', '/')}/${provider}`;
+                            
                             markdown += `## ${moduleName}
 
 **Description**: ${moduleInfo.description}
-**Category**: ${moduleInfo.category}
+**Registry Path**: \`${registryPath}\`
 **Source**: \`${moduleInfo.source}\`
-**Tags**: ${(moduleInfo.tags || []).join(', ')}
+${moduleInfo.documentation ? `**Documentation**: ${moduleInfo.documentation}` : ''}
 
 `;
                         });
@@ -707,19 +767,50 @@ module "unity_vpc" {
                 case 'quickstart':
                     markdown = `# Unity Terraform Modules - Quick Start
 
-## Getting Started
+## Getting Started with Unity Management Console
 
-`;
-                    if (moduleRegistry?.quickstart?.steps) {
-                        moduleRegistry.quickstart.steps.forEach((step, index) => {
-                            markdown += `${index + 1}. ${step}\n`;
-                        });
-                    }
-                    markdown += `
-## Complete Infrastructure Example
+1. Set up the Unity Management Console with module registry
+2. Choose a module from the registry below
+3. Reference the module in your Terraform configuration using standard registry syntax
+4. Configure the required inputs for your use case
+5. Run \`terraform init\` and \`terraform apply\`
+
+## Module Registry Usage
+
+The Unity Management Console acts as a Terraform Module Registry. Reference modules using standard Terraform syntax:
 
 \`\`\`hcl
-${moduleRegistry?.quickstart?.example?.code || ''}
+# Basic S3 bucket
+module "data_bucket" {
+  source  = "my-unity-console.com/unity/s3/aws"
+  version = "~> 1.0"
+  
+  bucket_name = "my-unity-data-bucket"
+  environment = "dev"
+  project     = "unity"
+}
+
+# VPC with subnets
+module "network" {
+  source  = "my-unity-console.com/unity/vpc/aws"
+  version = "~> 1.0"
+  
+  vpc_cidr           = "10.0.0.0/16"
+  name_prefix        = "my-unity"
+  availability_zones = ["us-west-2a", "us-west-2b"]
+}
+\`\`\`
+
+## Module Registry Configuration
+
+The Management Console loads modules from this registry configuration:
+
+\`\`\`bash
+# Registry URL
+https://raw.githubusercontent.com/jl-0/custom-mc-modules/main/module-registry.json
+
+# Local registry file location
+~/.unity/workdir/module-registry.json
 \`\`\``;
                     break;
                     
@@ -728,7 +819,6 @@ ${moduleRegistry?.quickstart?.example?.code || ''}
 
 **Name**: ${moduleRegistry?.metadata?.name || 'Unity Terraform Modules Registry'}
 **Description**: ${moduleRegistry?.metadata?.description || ''}
-**Repository**: ${moduleRegistry?.metadata?.repository || ''}
 **Last Updated**: ${moduleRegistry?.metadata?.last_updated || ''}
 
 ## Registry URL
@@ -747,28 +837,37 @@ ${JSON.stringify(moduleRegistry, null, 2)}
                 default:
                     if (page.startsWith('module-') && moduleData) {
                         const moduleName = page.replace('module-', '');
+                        const provider = getProviderFromModule(moduleName, moduleData.source);
+                        const registryPath = `my-unity-console.com/${moduleName.replace('-', '/')}/${provider}`;
+                        const readme = moduleReadmes[moduleName];
+                        
                         markdown = `# ${moduleName}
 
 **Description**: ${moduleData.description}
-**Category**: ${moduleData.category}
+**Registry Path**: \`${registryPath}\`
 **Source**: \`${moduleData.source}\`
-**Tags**: ${(moduleData.tags || []).join(', ')}
+${moduleData.documentation ? `**Documentation**: ${moduleData.documentation}` : ''}
 
-## Usage Examples
-
-`;
-                        if (moduleData.examples) {
-                            moduleData.examples.forEach(example => {
-                                markdown += `### ${example.name}
-
-${example.description}
+## Usage Example
 
 \`\`\`hcl
-${example.code}
+module "${moduleName.replace('unity-', '')}" {
+  source  = "${registryPath}"
+  version = "~> 1.0"
+  
+  # Required inputs${generateExampleInputs(moduleData.inputs)}
+}
 \`\`\`
 
 `;
-                            });
+                        
+                        // Include README content if available
+                        if (readme) {
+                            markdown += `## Module Documentation
+
+${readme}
+
+`;
                         }
                         
                         markdown += `## Inputs
@@ -790,7 +889,8 @@ ${example.code}
 |------|-------------|
 `;
                         if (moduleData.outputs) {
-                            Object.entries(moduleData.outputs).forEach(([name, description]) => {
+                            Object.entries(moduleData.outputs).forEach(([name, outputData]) => {
+                                const description = typeof outputData === 'string' ? outputData : outputData.description;
                                 markdown += `| \`${name}\` | ${description} |\n`;
                             });
                         }
@@ -838,6 +938,10 @@ ${example.code}
                 return '<h2>Module not found</h2><p>The requested module does not exist.</p>';
             }
             
+            const provider = getProviderFromModule(moduleName, moduleData.source);
+            const registryPath = `my-unity-console.com/${moduleName.replace('-', '/')}/${provider}`;
+            const readme = moduleReadmes[moduleName];
+            
             let html = `
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
@@ -849,46 +953,46 @@ ${example.code}
                 
                 <p style="font-size: 1.125rem; margin-bottom: 2rem;">${moduleData.description}</p>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
-                        <strong>Category:</strong> ${moduleData.category}
+                        <strong>Registry Path:</strong><br>
+                        <code style="font-size: 0.9rem;">${registryPath}</code>
                     </div>
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
-                        <strong>Source:</strong> <code>${moduleData.source}</code>
+                        <strong>Source:</strong><br>
+                        <code style="font-size: 0.9rem;">${moduleData.source}</code>
                     </div>
+                    ${moduleData.documentation ? `
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
-                        <strong>Documentation:</strong> <a href="https://github.com/jl-0/custom-mc-modules/blob/main/modules/${moduleName.replace('unity-', '')}/README.md" target="_blank" style="color: var(--unity-blue);">View README</a>
+                        <strong>Documentation:</strong><br>
+                        <a href="${moduleData.documentation}" target="_blank" style="color: var(--unity-blue);">📖 View README</a>
                     </div>
+                    ` : ''}
                 </div>
+                
+                <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Usage Example</h3>
+                <p style="margin-bottom: 1rem;">Reference this module in your Terraform configuration:</p>
+                
+                <pre><code class="language-hcl">module "${moduleName.replace('unity-', '')}" {
+  source  = "${registryPath}"
+  version = "~> 1.0"
+  
+  # Required inputs${generateExampleInputs(moduleData.inputs)}
+}</code></pre>
             `;
             
-            if (moduleData.tags && moduleData.tags.length > 0) {
+            // If we have README content, parse and display it
+            if (readme) {
+                const readmeHtml = parseReadmeContent(readme);
                 html += `
-                    <div style="margin-bottom: 2rem;">
-                        <strong>Tags:</strong>
-                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-                            ${moduleData.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                        </div>
+                    <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Module Documentation</h3>
+                    <div style="background: #f9fafb; padding: 1.5rem; border-radius: 0.5rem; border-left: 4px solid var(--unity-blue);">
+                        ${readmeHtml}
                     </div>
                 `;
             }
             
-            // Usage examples
-            if (moduleData.examples && moduleData.examples.length > 0) {
-                html += '<h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Examples</h3>';
-                
-                moduleData.examples.forEach(example => {
-                    html += `
-                        <div style="margin-bottom: 2rem;">
-                            <h4 style="color: var(--unity-gray-dark); margin-bottom: 0.5rem;">${example.name}</h4>
-                            <p style="color: var(--unity-gray); margin-bottom: 1rem;">${example.description}</p>
-                            <pre><code class="language-hcl">${example.code}</code></pre>
-                        </div>
-                    `;
-                });
-            }
-            
-            // Inputs
+            // Inputs from registry
             if (moduleData.inputs) {
                 html += '<h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Inputs</h3>';
                 html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">';
@@ -909,23 +1013,59 @@ ${example.code}
                 html += '</table></div>';
             }
             
-            // Outputs
+            // Outputs from registry
             if (moduleData.outputs) {
                 html += '<h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Outputs</h3>';
                 html += '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">';
                 html += '<tr style="background: #f8fafc;"><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Name</th><th style="text-align: left; padding: 0.75rem; border: 1px solid #e2e8f0;">Description</th></tr>';
                 
-                Object.entries(moduleData.outputs).forEach(([outputName, outputDescription]) => {
+                Object.entries(moduleData.outputs).forEach(([outputName, outputData]) => {
+                    const description = typeof outputData === 'string' ? outputData : outputData.description;
                     html += `
                         <tr>
                             <td style="padding: 0.75rem; border: 1px solid #e2e8f0;"><code>${outputName}</code></td>
-                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">${outputDescription}</td>
+                            <td style="padding: 0.75rem; border: 1px solid #e2e8f0;">${description}</td>
                         </tr>
                     `;
                 });
                 
                 html += '</table></div>';
             }
+            
+            return html;
+        }
+        
+        // Generate example inputs for usage example
+        function generateExampleInputs(inputs) {
+            if (!inputs) return '';
+            
+            let examples = '';
+            Object.entries(inputs).forEach(([name, input]) => {
+                if (input.required) {
+                    const exampleValue = getExampleValue(input.type, name);
+                    examples += `\n  ${name} = ${exampleValue}`;
+                }
+            });
+            
+            return examples;
+        }
+        
+        // Parse README content and convert to HTML
+        function parseReadmeContent(readme) {
+            // Simple markdown-to-HTML conversion for basic formatting
+            let html = readme
+                .replace(/^# (.+)$/gm, '<h4 style="color: var(--unity-blue); margin: 1.5rem 0 0.5rem;">$1</h4>')
+                .replace(/^## (.+)$/gm, '<h5 style="color: var(--unity-gray-dark); margin: 1rem 0 0.5rem;">$1</h5>')
+                .replace(/^### (.+)$/gm, '<h6 style="color: var(--unity-gray-dark); margin: 0.5rem 0;">$1</h6>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`(.+?)`/g, '<code>$1</code>')
+                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
+                .replace(/\n/g, '<br>')
+                .replace(/^- (.+)$/gm, '<li>$1</li>');
+            
+            // Wrap list items in ul tags
+            html = html.replace(/(<li>.*<\/li>)/g, '<ul style="margin-left: 1.5rem;">$1</ul>');
             
             return html;
         }

@@ -1,0 +1,19 @@
+[
+  {
+    "Name": "simple-demo",
+    "Version": "v1.0",
+    "Channel": "beta",
+    "Owner": "Jeff Leach",
+    "Description": "Simple app using the S3 module",
+    "Repository": "https://github.com/jl-0/custom-mc-modules",
+    "Tags": [
+      "demo"
+    ],
+    "Category": "general",
+    "IamRoles": {},
+    "WorkDirectory": "applications/simple-demo/v1.0/terraform", 
+    "ManagedDependencies": {},
+    "Backend": "terraform",
+    "DefaultDeployment": {}
+  }
+]

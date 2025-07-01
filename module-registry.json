@@ -1,36 +1,30 @@
 {
   "version": "1.0",
   "metadata": {
-    "name": "Unity Terraform Modules Registry",
-    "description": "Official Unity Science Data System Terraform module registry providing reusable infrastructure components",
-    "last_updated": "2025-06-30T22:00:00Z",
-    "repository": "https://github.com/jl-0/custom-mc-modules",
-    "documentation": "https://jl-0.github.io/custom-mc-modules",
-    "maintainer": "Unity SDS Team",
-    "license": "Apache-2.0"
+    "name": "Custom Terraform Modules for Unity MC",
+    "description": "Example repo of custom terraform modules for use in Unity MC",
+    "last_updated": "2025-07-01T00:00:00Z"
   },
   "modules": {
     "unity-s3": {
       "description": "Unity S3 bucket with security best practices and lifecycle management",
       "source": "github.com/jl-0/custom-mc-modules//modules/s3",
       "documentation": "https://github.com/jl-0/custom-mc-modules/blob/main/modules/s3/README.md",
-      "category": "storage",
-      "tags": ["s3", "storage", "security", "lifecycle"],
       "versions": {
+        "1.0.0": {
+          "ref": "v1.0.0",
+          "terraform_version": ">= 1.0"
+        },
         "latest": {
           "ref": "main",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          }
+          "terraform_version": ">= 1.0"
         }
       },
       "inputs": {
         "bucket_name": {
           "description": "Name of the S3 bucket",
           "type": "string",
-          "required": true,
-          "validation": "Must be 3-63 characters, lowercase letters, numbers, and hyphens only"
+          "required": true
         },
         "environment": {
           "description": "Environment name (e.g., dev, staging, prod)",
@@ -88,46 +82,42 @@
         }
       },
       "outputs": {
-        "bucket_id": "The name of the bucket",
-        "bucket_arn": "The ARN of the bucket",
-        "bucket_domain_name": "The bucket domain name",
-        "bucket_url_s3": "S3 protocol URL of the bucket",
-        "console_url": "AWS Console URL for the bucket"
-      },
-      "examples": [
-        {
-          "name": "Basic S3 Bucket",
-          "description": "Simple S3 bucket with default security settings",
-          "code": "module \"unity_bucket\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/s3?ref=main\"\n\n  bucket_name = \"unity-example-bucket\"\n  environment = \"dev\"\n  project     = \"unity\"\n}"
+        "bucket_id": {
+          "description": "The name of the bucket"
         },
-        {
-          "name": "S3 with Lifecycle",
-          "description": "S3 bucket with standard Unity lifecycle rules",
-          "code": "module \"unity_data_bucket\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/s3?ref=main\"\n\n  bucket_name               = \"unity-data-storage\"\n  environment               = \"prod\"\n  enable_standard_lifecycle = true\n}"
+        "bucket_arn": {
+          "description": "The ARN of the bucket"
+        },
+        "bucket_domain_name": {
+          "description": "The bucket domain name"
+        },
+        "bucket_url_s3": {
+          "description": "S3 protocol URL of the bucket"
+        },
+        "console_url": {
+          "description": "AWS Console URL for the bucket"
         }
-      ]
+      }
     },
     "unity-vpc": {
       "description": "Unity VPC with public/private subnets across multiple AZs",
       "source": "github.com/jl-0/custom-mc-modules//modules/vpc",
       "documentation": "https://github.com/jl-0/custom-mc-modules/blob/main/modules/vpc/README.md",
-      "category": "networking",
-      "tags": ["vpc", "networking", "subnets", "nat"],
       "versions": {
+        "1.0.0": {
+          "ref": "v1.0.0",
+          "terraform_version": ">= 1.0"
+        },
         "latest": {
           "ref": "main",
-          "terraform_version": ">= 1.0",
-          "providers": {
-            "aws": ">= 4.0"
-          }
+          "terraform_version": ">= 1.0"
         }
       },
       "inputs": {
         "vpc_cidr": {
           "description": "CIDR block for the VPC",
           "type": "string",
-          "required": true,
-          "validation": "Must be a valid CIDR block (e.g., 10.0.0.0/16)"
+          "required": true
         },
         "name_prefix": {
           "description": "Name prefix for all resources",
@@ -159,47 +149,25 @@
         }
       },
       "outputs": {
-        "vpc_id": "The ID of the VPC",
-        "vpc_cidr_block": "The CIDR block of the VPC",
-        "public_subnet_ids": "List of public subnet IDs",
-        "private_subnet_ids": "List of private subnet IDs",
-        "nat_gateway_ids": "List of NAT Gateway IDs",
-        "internet_gateway_id": "The ID of the Internet Gateway"
-      },
-      "examples": [
-        {
-          "name": "Basic VPC",
-          "description": "VPC with public and private subnets",
-          "code": "module \"unity_vpc\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/vpc?ref=main\"\n\n  vpc_cidr           = \"10.0.0.0/16\"\n  name_prefix        = \"unity-dev\"\n  availability_zones = [\"us-west-2a\", \"us-west-2b\"]\n}"
+        "vpc_id": {
+          "description": "The ID of the VPC"
+        },
+        "vpc_cidr_block": {
+          "description": "The CIDR block of the VPC"
+        },
+        "public_subnet_ids": {
+          "description": "List of public subnet IDs"
+        },
+        "private_subnet_ids": {
+          "description": "List of private subnet IDs"
+        },
+        "nat_gateway_ids": {
+          "description": "List of NAT Gateway IDs"
+        },
+        "internet_gateway_id": {
+          "description": "The ID of the Internet Gateway"
         }
-      ]
-    }
-  },
-  "categories": {
-    "storage": {
-      "name": "Storage",
-      "description": "Storage services including S3, EFS, and EBS",
-      "modules": ["unity-s3"]
-    },
-    "networking": {
-      "name": "Networking",
-      "description": "Network infrastructure including VPC, subnets, and load balancers",
-      "modules": ["unity-vpc"]
-    }
-  },
-  "quickstart": {
-    "description": "Get started with Unity Terraform modules",
-    "steps": [
-      "Choose a module from the registry",
-      "Review the module documentation and examples",
-      "Add the module to your Terraform configuration",
-      "Configure the required inputs",
-      "Run terraform init and terraform apply"
-    ],
-    "example": {
-      "name": "Complete Infrastructure Example",
-      "description": "Example showing how to use multiple modules together",
-      "code": "# VPC\nmodule \"unity_vpc\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/vpc?ref=main\"\n\n  vpc_cidr           = \"10.0.0.0/16\"\n  name_prefix        = \"unity-dev\"\n  availability_zones = [\"us-west-2a\", \"us-west-2b\"]\n}\n\n# S3 Bucket\nmodule \"unity_bucket\" {\n  source = \"github.com/jl-0/custom-mc-modules//modules/s3?ref=main\"\n\n  bucket_name               = \"unity-data-bucket\"\n  environment               = \"dev\"\n  enable_standard_lifecycle = true\n}"
+      }
     }
   }
 }

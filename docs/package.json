@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp module-registry.json dist/",
     "preview": "vite preview",
     "serve": "vite preview --port 3000"
   },

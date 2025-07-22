@@ -300,7 +300,7 @@
         async function init() {
             try {
                 // Load module registry
-                const response = await fetch('../module-registry.json');
+                const response = await fetch('./module-registry.json');
                 moduleRegistry = await response.json();
                 
                 // Load README files for each module

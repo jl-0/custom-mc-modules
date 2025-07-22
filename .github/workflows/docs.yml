@@ -253,6 +253,8 @@ jobs:
 
       - name: Build documentation site
         run: |
+          # Copy module-registry.json to docs directory for the website
+          cp module-registry.json docs/
           cd docs
           npm run build
         env:
@@ -261,7 +263,7 @@ jobs:
       - name: Upload documentation artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: docs/dist
 
   deploy-docs:
     if: github.ref == 'refs/heads/main'

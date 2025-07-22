@@ -91,8 +91,11 @@ jobs:
             # Extract module data
             description=$(jq -r ".modules[\"$module_key\"].description" module-registry.json)
             source=$(jq -r ".modules[\"$module_key\"].source" module-registry.json)
-            category=$(jq -r ".modules[\"$module_key\"].category" module-registry.json)
-            tags=$(jq -r ".modules[\"$module_key\"].tags | join(\", \")" module-registry.json)
+            # Extract category from module key prefix (infrastructure-, networking-, etc.)
+            category=$(echo "$module_key" | sed 's/-.*$//')
+            # Use provider as tag if no tags field exists
+            provider=$(jq -r ".modules[\"$module_key\"].provider // \"aws\"" module-registry.json)
+            tags="$provider, terraform"
             
             cat >> docs/llm-documentation.md << EOF
           ### $module_key
@@ -139,7 +142,7 @@ jobs:
           EOF
             
             # Add outputs documentation
-            jq -r ".modules[\"$module_key\"].outputs | to_entries[] | \"- \`\" + .key + \"\`: \" + .value" module-registry.json >> docs/llm-documentation.md
+            jq -r ".modules[\"$module_key\"].outputs | to_entries[] | \"- \`\" + .key + \"\`: \" + (.value.description // .value)" module-registry.json >> docs/llm-documentation.md
             
             echo -e "\n---\n" >> docs/llm-documentation.md
           done
@@ -395,7 +398,8 @@ jobs:
           echo "📦 Checking referenced modules..."
           for module in $(jq -r '.modules | keys[]' module-registry.json); do
             # Extract actual module directory name from the module key
-            module_dir=$(echo "$module" | sed 's/unity-//')
+            # Remove any prefix before the module name (e.g., infrastructure-s3 -> s3)
+            module_dir=$(echo "$module" | sed 's/^[^-]*-//')
             if [ -d "modules/$module_dir" ] && [ -f "modules/$module_dir/main.tf" ]; then
               echo "✅ Module $module exists (modules/$module_dir)"
             else
@@ -408,7 +412,15 @@ jobs:
           for dir in modules/*/; do
             if [ -f "$dir/main.tf" ]; then
               module_name=$(basename "$dir")
-              if jq -e ".modules[\"unity-$module_name\"]" module-registry.json > /dev/null; then
+              # Check if module exists with any prefix (infrastructure-, etc.)
+              module_found=false
+              for registered_module in $(jq -r '.modules | keys[]' module-registry.json); do
+                if [[ "$registered_module" == *"-$module_name" ]]; then
+                  module_found=true
+                  break
+                fi
+              done
+              if [ "$module_found" = true ]; then
                 echo "✅ Module $module_name is registered"
               else
                 echo "⚠️  Module $module_name exists but not registered in module-registry.json"

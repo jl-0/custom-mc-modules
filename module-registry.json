@@ -3,6 +3,7 @@
   "metadata": {
     "name": "Custom Terraform Modules for Unity MC",
     "description": "Example repo of custom terraform modules for use in Unity MC",
+    "repository": "https://github.com/jl-0/custom-mc-modules",
     "last_updated": "2025-07-01T00:00:00Z"
   },
   "modules": {

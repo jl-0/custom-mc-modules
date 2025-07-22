@@ -10,19 +10,19 @@ This documentation is optimized for Large Language Models (LLMs) to understand a
 
 ## Available Modules
 
-### unity-s3
+### infrastructure-s3
 
 **Description:** Unity S3 bucket with security best practices and lifecycle management
 
 **Source:** `github.com/jl-0/custom-mc-modules//modules/s3`
 
-**Category:** storage
+**Category:** infrastructure
 
-**Tags:** s3, storage, security, lifecycle
+**Tags:** unity, terraform
 
 **Usage Example:**
 ```hcl
-module "s3_example" {
+module "infrastructure-s3_example" {
   source = "github.com/jl-0/custom-mc-modules//modules/s3?ref=main"
   
   bucket_name = "example-value"
@@ -52,19 +52,19 @@ module "s3_example" {
 
 ---
 
-### unity-vpc
+### infrastructure-vpc
 
 **Description:** Unity VPC with public/private subnets across multiple AZs
 
 **Source:** `github.com/jl-0/custom-mc-modules//modules/vpc`
 
-**Category:** networking
+**Category:** infrastructure
 
-**Tags:** vpc, networking, subnets, nat
+**Tags:** unity, terraform
 
 **Usage Example:**
 ```hcl
-module "vpc_example" {
+module "infrastructure-vpc_example" {
   source = "github.com/jl-0/custom-mc-modules//modules/vpc?ref=main"
   
   vpc_cidr = "example-value"

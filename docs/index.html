@@ -31,6 +31,9 @@
     <!-- Prism.js for syntax highlighting -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
     
+    <!-- Marked.js for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
     <style>
         :root {
             --unity-blue: #1e40af;
@@ -563,7 +566,7 @@ module "network" {
                             <div style="background: #f1f5f9; padding: 0.5rem; border-radius: 0.25rem; margin-bottom: 0.5rem;">
                                 <code style="font-size: 0.8rem;">${registryPath}</code>
                             </div>
-                            ${moduleData.documentation ? `<a href="${moduleData.documentation}" style="color: var(--unity-blue); font-size: 0.9rem;">📖 Documentation</a>` : ''}
+                            <span style="color: var(--unity-blue); font-size: 0.9rem;">📖 Click to view details</span>
                         </div>
                     </div>
                 `;
@@ -962,12 +965,10 @@ ${readme}
                         <strong>Source:</strong><br>
                         <code style="font-size: 0.9rem;">${moduleData.source}</code>
                     </div>
-                    ${moduleData.documentation ? `
                     <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem;">
                         <strong>Documentation:</strong><br>
-                        <a href="${moduleData.documentation}" target="_blank" style="color: var(--unity-blue);">📖 View README</a>
+                        <span style="color: var(--unity-gray);">📖 Module documentation displayed below</span>
                     </div>
-                    ` : ''}
                 </div>
                 
                 <h3 style="color: var(--unity-blue); font-size: 1.5rem; margin: 2rem 0 1rem;">Usage Example</h3>
@@ -1052,22 +1053,77 @@ ${readme}
         
         // Parse README content and convert to HTML
         function parseReadmeContent(readme) {
-            // Simple markdown-to-HTML conversion for basic formatting
-            let html = readme
-                .replace(/^# (.+)$/gm, '<h4 style="color: var(--unity-blue); margin: 1.5rem 0 0.5rem;">$1</h4>')
-                .replace(/^## (.+)$/gm, '<h5 style="color: var(--unity-gray-dark); margin: 1rem 0 0.5rem;">$1</h5>')
-                .replace(/^### (.+)$/gm, '<h6 style="color: var(--unity-gray-dark); margin: 0.5rem 0;">$1</h6>')
-                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                .replace(/`(.+?)`/g, '<code>$1</code>')
-                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
-                .replace(/\n/g, '<br>')
-                .replace(/^- (.+)$/gm, '<li>$1</li>');
-            
-            // Wrap list items in ul tags
-            html = html.replace(/(<li>.*<\/li>)/g, '<ul style="margin-left: 1.5rem;">$1</ul>');
-            
-            return html;
+            if (typeof marked !== 'undefined') {
+                // Use marked library for proper markdown parsing
+                const renderer = new marked.Renderer();
+                
+                // Customize heading styles to match our design
+                renderer.heading = function(text, level) {
+                    const styles = {
+                        1: 'color: var(--unity-blue); font-size: 1.75rem; margin: 2rem 0 1rem; font-weight: 600;',
+                        2: 'color: var(--unity-blue); font-size: 1.5rem; margin: 1.5rem 0 0.75rem; font-weight: 600;',
+                        3: 'color: var(--unity-gray-dark); font-size: 1.25rem; margin: 1.25rem 0 0.5rem; font-weight: 600;',
+                        4: 'color: var(--unity-gray-dark); font-size: 1.1rem; margin: 1rem 0 0.5rem; font-weight: 500;',
+                        5: 'color: var(--unity-gray-dark); font-size: 1rem; margin: 0.75rem 0 0.5rem; font-weight: 500;',
+                        6: 'color: var(--unity-gray-dark); font-size: 0.9rem; margin: 0.5rem 0; font-weight: 500;'
+                    };
+                    return `<h${level} style="${styles[level] || styles[6]}">${text}</h${level}>`;
+                };
+                
+                // Customize code blocks
+                renderer.code = function(code, language) {
+                    const lang = language ? ` class="language-${language}"` : '';
+                    return `<pre style="background: #1e293b; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1rem 0;"><code${lang} style="color: #f1f5f9; font-family: 'JetBrains Mono', monospace;">${code}</code></pre>`;
+                };
+                
+                // Customize inline code
+                renderer.codespan = function(code) {
+                    return `<code style="background: #f1f5f9; color: #475569; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;">${code}</code>`;
+                };
+                
+                // Customize tables
+                renderer.table = function(header, body) {
+                    return `<div style="overflow-x: auto; margin: 1.5rem 0;"><table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0;">${header}${body}</table></div>`;
+                };
+                
+                renderer.tablerow = function(content) {
+                    return `<tr>${content}</tr>`;
+                };
+                
+                renderer.tablecell = function(content, flags) {
+                    const tag = flags.header ? 'th' : 'td';
+                    const style = flags.header 
+                        ? 'background: #f8fafc; padding: 0.75rem; border: 1px solid #e2e8f0; text-align: left; font-weight: 600;'
+                        : 'padding: 0.75rem; border: 1px solid #e2e8f0;';
+                    return `<${tag} style="${style}">${content}</${tag}>`;
+                };
+                
+                // Configure marked options
+                marked.setOptions({
+                    renderer: renderer,
+                    gfm: true,
+                    breaks: false
+                });
+                
+                return marked.parse(readme);
+            } else {
+                // Fallback to simple markdown-to-HTML conversion
+                let html = readme
+                    .replace(/^# (.+)$/gm, '<h4 style="color: var(--unity-blue); margin: 1.5rem 0 0.5rem;">$1</h4>')
+                    .replace(/^## (.+)$/gm, '<h5 style="color: var(--unity-gray-dark); margin: 1rem 0 0.5rem;">$1</h5>')
+                    .replace(/^### (.+)$/gm, '<h6 style="color: var(--unity-gray-dark); margin: 0.5rem 0;">$1</h6>')
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                    .replace(/`(.+?)`/g, '<code>$1</code>')
+                    .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/^- (.+)$/gm, '<li>$1</li>');
+                
+                // Wrap list items in ul tags
+                html = html.replace(/(<li>.*<\/li>)/g, '<ul style="margin-left: 1.5rem;">$1</ul>');
+                
+                return html;
+            }
         }
         
         // Function to copy page markdown to clipboard
